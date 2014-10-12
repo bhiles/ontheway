@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Blade - tutorial1 example</title>
 	<meta charset="utf-8" />
-
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+	<title>On the Way</title>
+
+        <link rel="stylesheet" href="css/bootstrap.min.css"/>
 	<link rel="stylesheet" href="css/leaflet.css" />
-	<!--[if lte IE 8]><link rel="stylesheet" href="../dist/leaflet.ie.css" /><![endif]-->
+
 </head>
 <body>
 	<div id="mappy" style="z-index=-1; width: 100%; height: 700px">
@@ -16,12 +18,25 @@
           <div class="leaflet-top" style="width: 100%; text-align: center;">
             <div style="display: inline-block;">
               <div class="leaflet-control">
-                <input id="query" type="text"></input>
-                <input id="query" type="text"></input>
-                <button id="search">Go!</button>
-                <h1>On the way...</h1>
-                <p>Find places you can grab a bite, sip a drink....it's
-                  up to you.</p>
+                <div clss="row">
+                  <form class="form-inline" role="form">
+                    <div class="form-group">
+                      <label class="sr-only" for="directions">From</label>
+                      <input type="text" class="form-control input-lg"
+                             id="directions" placeholder="From" autofocus="autofocus">
+                    </div>
+                    <div class="form-group">
+                      <label class="sr-only" for="directions">To</label>
+                      <input type="text" class="form-control input-lg" id="directions" placeholder="To">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">Go!</button>
+                  </form>
+                </div>
+                <div class="row">
+                  <h1>On the way...</h1>
+                  <p class="lead">Find places you can grab a bite, sip a
+                    drink, it's up to you.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -31,6 +46,8 @@
   <!-- this polyfill provides isArray.js compatibility -->
   <script type="text/javascript" src="js/ArrayLikeIsArray.js"></script>
   <script type="text/javascript" src="js/leaflet.js"></script>
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
   <script type="text/javascript" src="js/modern.js"></script>
 
 </body>
