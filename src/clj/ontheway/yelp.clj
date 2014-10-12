@@ -18,17 +18,14 @@
   ;; hard-coded to Portland, OR
   (let [key (str "yelp-api-search-1" offset)
         val (mem/get memcache-conn key)]
-    (prn "key is " key)
     (if val
-      (do
-        (prn "read from cache")
-        (-> val json/read-str clojure.walk/keywordize-keys))
+      (-> val json/read-str clojure.walk/keywordize-keys)
       (let [new-val (yelp-client/business-search yelp-conn
-                                        {"offset" offset
-                                         "term" "food"
-                                         "location" "Portland, OR"
-                                         "sort" "0"})]
-        (prn "fetching val and saving it")
+                                                 {"offset" offset
+                                                  "term" "food"
+                                                  "location" "Portland, OR"
+                                                  "sort" "0"})]
+
         (mem/set memcache-conn key 0 (json/write-str new-val))
         new-val))))
 

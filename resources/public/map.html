@@ -10,7 +10,23 @@
 	<!--[if lte IE 8]><link rel="stylesheet" href="../dist/leaflet.ie.css" /><![endif]-->
 </head>
 <body>
-	<div id="mappy" style="width: 600px; height: 400px"></div>
+	<div id="mappy" style="z-index=-1; width: 100%; height: 700px">
+          <!-- Put HTML I want in this div, it will overlay the map
+                    -->
+          <div class="leaflet-top" style="width: 100%; text-align: center;">
+            <div style="display: inline-block;">
+              <div class="leaflet-control">
+                <input id="query" type="text"></input>
+                <input id="query" type="text"></input>
+                <button id="search">Go!</button>
+                <h1>On the way...</h1>
+                <p>Find places you can grab a bite, sip a drink....it's
+                  up to you.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
 
   <!-- this polyfill provides isArray.js compatibility -->
   <script type="text/javascript" src="js/ArrayLikeIsArray.js"></script>
