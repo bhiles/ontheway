@@ -88,6 +88,7 @@
   (let [NumberedDivIcon (.-NumberedDivIcon js/L)]
     (-> L (.marker [lat, lng]
                    {:icon (NumberedDivIcon. {:number (str num)})})
+        (.on "click" #(aset js/window "location" (str "#" (section-id num))))
         (.addTo mappy))))
 
 (defn url-encode [s]
@@ -194,11 +195,7 @@
        (doseq [biz numbered-biz]
          (let [{:keys [id name url]} biz
                {:keys [latitude longitude]} (-> biz :location :coordinate)]
-           (add-numbered-marker latitude longitude id)
-           (comment (-> L (.marker [latitude, longitude]) 
-                        (.addTo m)
-                        (.bindPopup (str "<a href=\"" url "\">" name "</a>"))
-                        (.openPopup)))))
+           (add-numbered-marker latitude longitude id)))
        (dommy/append! (sel1 :#biz-container) (biz-template numbered-biz))
        (expand-biz-sidebar) ;; reduce map size to allow for biz sidebar
        (.fitBounds m
