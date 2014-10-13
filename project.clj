@@ -10,6 +10,7 @@
                  [org.clojure/data.json "0.2.5"]
                  [clojurewerkz/spyglass "1.1.0"]
                  [net.drib/blade "0.1.0"]
+                 [prismatic/dommy "0.1.3"]
                  [gws/yelp "0.2.0"]
                  [cljs-http "0.1.16"]]
   :plugins [[lein-cljsbuild "1.0.3"]

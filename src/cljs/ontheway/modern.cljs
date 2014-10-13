@@ -1,10 +1,12 @@
 (ns ontheway.modern
+  (:use-macros [dommy.macros :only [deftemplate sel1]])
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs-http.client :as http]
             [cljs.core.async :refer [put! chan <!]]
             [goog.dom :as dom]
             [goog.events :as events]
-            [blade :refer [L]]))
+            [blade :refer [L]]
+            [dommy.core :as dommy]))
 
 (blade/bootstrap)
 
@@ -24,6 +26,31 @@
 
 (defn to-query []
   (.-value (dom/getElement "directions-to")))
+
+(defn remove-explanation-text []
+  (.remove (dom/getElement "explanation")))
+
+(deftemplate simple-template [cat]
+    [:img {:src cat}])
+
+(deftemplate biz-template [businesses]
+  (for [biz businesses]
+    [:div {:class "row"}
+     [:div {:class "media"}
+      [:a {:class "pull-left"}
+       [:img
+        {:class "media-object"
+         :style "width: 180px; height: auto; overflow: hidden;"
+         :src (:image_url biz)}]]
+      [:div
+       {:class "media-body"}
+       [:h4 {:class "list-group-item-heading"}
+        [:a {:href (:url biz)}
+         (:name biz)]]]]]))
+
+(defn expand-biz-sidebar [businesses]
+  (.setAttribute (dom/getElement "map-container") "class" "col-md-8 no-right-padding")
+  (.setAttribute (dom/getElement "biz-container") "class" "col-md-4"))
 
 (defn setup-map [m lat lng]
   (-> m (.setView [lat lng] 12))
@@ -60,7 +87,7 @@
      :ne-lng ne-lng}))
 
 (defn max-box-corners [steps]
-  (let [extra 0.005
+  (let [extra 0.005 ;; extra leaves room for the top of the page (and bottom)
         lats (mapcat (juxt :start-lat :end-lat) steps)
         lngs (mapcat (juxt :start-lng :end-lng) steps)
         sw-lat (- (apply min lats) extra)
@@ -137,13 +164,19 @@
            (-> L (.marker [latitude, longitude]) 
                (.addTo m)
                (.bindPopup (str "<a href=\"" url "\">" name "</a>"))
-               (.openPopup))))))))
+               (.openPopup))))
+       (dommy/append! (sel1 :#biz-container) (biz-template businesses))
+       (expand-biz-sidebar) ;; reduce map size to allow for biz sidebar
+       (.fitBounds m
+                   [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
+                    [(:ne-lat map-bounds) (:ne-lng map-bounds)]])
+       ))))
 
 (let [clicks (listen (dom/getElement "btn-go") "click")]
   (go (while true
         (<! clicks) ;; wait for a click
-        ;; clear text (if not already cleared)
         ;; clear existing map's directions
+        (remove-explanation-text) ;; clear text (if not already cleared)
         (direction-steps mappy (from-query) (to-query)) ;; draw map's directions
         )))
 
