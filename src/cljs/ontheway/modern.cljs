@@ -1,7 +1,9 @@
 (ns ontheway.modern
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs-http.client :as http]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [put! chan <!]]
+            [goog.dom :as dom]
+            [goog.events :as events]
             [blade :refer [L]]))
 
 (blade/bootstrap)
@@ -11,9 +13,21 @@
 (def tile-url "http://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}")
 (def mappy (-> L (.map "mappy")))
 
+(defn listen [el type]
+  (let [out (chan)]
+    (events/listen el type
+                   (fn [e] (put! out e)))
+    out))
+
+(defn from-query []
+  (.-value (dom/getElement "directions-from")))
+
+(defn to-query []
+  (.-value (dom/getElement "directions-to")))
+
 (defn setup-map [m lat lng]
   (-> m (.setView [lat lng] 12))
-  (-> L (.tileLayer tile-url {:maxZoom 18
+  (-> L (.tileLayer tile-url {:maxZoom 16 ;; this is the limitation of the tile
                               :attribution "from me!"
                               :id "examples.map-i875mjb7"})
       (.addTo m)))
@@ -86,31 +100,39 @@
                         :end-lng end-lng}))
                    steps)
          ;; TODO: missing last lat-lng
-         lines (map
-                (fn [{:keys [start-lat start-lng]}]
-                  [start-lat start-lng])
-                lat-lngs)
-         yelp-response (<! (http/get "http://localhost:3000/yelp"))
-         businesses (-> yelp-response :body json-parse)
-         relevant-biz (find-businesses-on-the-way lat-lngs businesses)]
-     (def r relevant-biz)
+         last-lat-lng (last lat-lngs)
+         lines (concat
+                (map
+                 (fn [{:keys [start-lat start-lng]}]
+                   [start-lat start-lng])
+                 lat-lngs)
+                [[(:end-lat last-lat-lng) (:end-lng last-lat-lng)]])]
      (-> L (.polyline lines)
-         (.addTo m))
-     (doseq [biz relevant-biz]
-       (let [{:keys [name url]} biz
-             {:keys [latitude longitude]} (-> biz :location :coordinate)]
-         (-> L (.marker [latitude, longitude]) 
-             (.addTo m)
-             (.bindPopup (str "<a href=\"" url "\">" name "</a>"))
-             (.openPopup)))))))
+         (.addTo m)) ;; draw map directions
+     ;; Fetch and draw Yelp data
+     (let [yelp-response (<! (http/get "http://localhost:3000/yelp"))
+           businesses (-> yelp-response :body json-parse)
+           relevant-biz (find-businesses-on-the-way lat-lngs businesses)]
+       (doseq [biz relevant-biz]
+         (let [{:keys [name url]} biz
+               {:keys [latitude longitude]} (-> biz :location :coordinate)]
+           (-> L (.marker [latitude, longitude]) 
+               (.addTo m)
+               (.bindPopup (str "<a href=\"" url "\">" name "</a>"))
+               (.openPopup))))))))
+
+(let [clicks (listen (dom/getElement "btn-go") "click")]
+  (go (while true
+        (<! clicks) ;; wait for a click
+        ;; clear text (if not already cleared)
+        ;; clear existing map's directions
+        (direction-steps mappy (from-query) (to-query)) ;; draw map's directions
+        )))
 
 (defn geolocation [position]
   (let [lng (.-longitude js/position.coords)
         lat (.-latitude js/position.coords)]
-    (setup-map mappy lat lng)
-    (direction-steps mappy
-                     "1200 NW Marshall Street, Portland, OR"
-                     "1005 W Burnside St, Portland, OR 97209")))
+    (setup-map mappy lat lng)))
 
 ;; Main method
 (.getCurrentPosition js/navigator.geolocation geolocation)
