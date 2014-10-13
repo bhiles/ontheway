@@ -148,7 +148,6 @@
                  lat-lngs)
                 [[(:end-lat last-lat-lng) (:end-lng last-lat-lng)]])
          map-bounds (max-box-corners lat-lngs)]
-     (.log js/console (str "map bounds are " (clj->js map-bounds)))
      (-> L (.polyline lines)
          (.addTo m)) ;; draw map directions
      (.fitBounds m
