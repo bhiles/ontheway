@@ -59,6 +59,19 @@
      :ne-lat ne-lat
      :ne-lng ne-lng}))
 
+(defn max-box-corners [steps]
+  (let [extra 0.005
+        lats (mapcat (juxt :start-lat :end-lat) steps)
+        lngs (mapcat (juxt :start-lng :end-lng) steps)
+        sw-lat (- (apply min lats) extra)
+        ne-lat (+ (apply max lats) extra)
+        sw-lng (- (apply min lngs) extra)
+        ne-lng (+ (apply max lngs) extra)]
+    {:sw-lat sw-lat
+     :sw-lng sw-lng
+     :ne-lat ne-lat
+     :ne-lng ne-lng}))
+
 (defn within-box? [lat lng box]
   (let [{:keys [sw-lat sw-lng ne-lat ne-lng]} box]
     (and (< sw-lat lat ne-lat)
@@ -106,9 +119,14 @@
                  (fn [{:keys [start-lat start-lng]}]
                    [start-lat start-lng])
                  lat-lngs)
-                [[(:end-lat last-lat-lng) (:end-lng last-lat-lng)]])]
+                [[(:end-lat last-lat-lng) (:end-lng last-lat-lng)]])
+         map-bounds (max-box-corners lat-lngs)]
+     (.log js/console (str "map bounds are " (clj->js map-bounds)))
      (-> L (.polyline lines)
          (.addTo m)) ;; draw map directions
+     (.fitBounds m
+                 [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
+                  [(:ne-lat map-bounds) (:ne-lng map-bounds)]])
      ;; Fetch and draw Yelp data
      (let [yelp-response (<! (http/get "http://localhost:3000/yelp"))
            businesses (-> yelp-response :body json-parse)
