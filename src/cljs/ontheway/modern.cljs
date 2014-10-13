@@ -46,11 +46,36 @@
        {:class "media-body"}
        [:h4 {:class "list-group-item-heading"}
         [:a {:href (:url biz)}
-         (:name biz)]]]]]))
+         (:name biz)]]
+       [:table {:class "table table-condensed"}
+        [:tbody
+         [:tr
+          [:td {:class "text-right"}
+           "Categories"]
+          [:td (-> biz :categories first first)]]
+         [:tr 
+          [:td {:class "text-right"}
+           "Hood"]
+          [:td (-> biz :location :neighborhoods second)]]
+         [:tr
+          [:td {:class "text-right"}
+           "Rating"]
+          [:td (:rating biz)]]
+         [:tr
+          [:td {:class "text-right"}
+           "Reviews"]
+          [:td (:review_count biz)]]
+         [:tr
+          [:td {:class "text-right"}
+           "Price"]
+          [:td (:review_count biz)]]]]]]]))
 
-(defn expand-biz-sidebar [businesses]
-  (.setAttribute (dom/getElement "map-container") "class" "col-md-8 no-right-padding")
-  (.setAttribute (dom/getElement "biz-container") "class" "col-md-4"))
+(defn expand-biz-sidebar []
+  (.setAttribute (dom/getElement "map-container")
+                 "class" "col-md-8 no-right-padding")
+  (.setAttribute (dom/getElement "biz-container")
+                 "class" "col-md-4"))
+
 
 (defn setup-map [m lat lng]
   (-> m (.setView [lat lng] 12))
