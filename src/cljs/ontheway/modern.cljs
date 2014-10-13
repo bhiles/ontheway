@@ -33,42 +33,42 @@
 (deftemplate simple-template [cat]
     [:img {:src cat}])
 
+(defn section-id [num]
+  (str "biz-" num))
+
 (deftemplate biz-template [businesses]
   (for [biz businesses]
     [:div {:class "row"}
-     [:div {:class "media"}
-      [:a {:class "pull-left"}
-       [:img
-        {:class "media-object"
-         :style "width: 180px; height: auto; overflow: hidden;"
-         :src (:image_url biz)}]]
-      [:div
-       {:class "media-body"}
-       [:h4 {:class "list-group-item-heading"}
-        [:a {:href (:url biz)}
-         (:name biz)]]
-       [:table {:class "table table-condensed"}
-        [:tbody
-         [:tr
-          [:td {:class "text-right"}
-           "Categories"]
-          [:td (-> biz :categories first first)]]
-         [:tr 
-          [:td {:class "text-right"}
-           "Hood"]
-          [:td (-> biz :location :neighborhoods second)]]
-         [:tr
-          [:td {:class "text-right"}
-           "Rating"]
-          [:td (:rating biz)]]
-         [:tr
-          [:td {:class "text-right"}
-           "Reviews"]
-          [:td (:review_count biz)]]
-         [:tr
-          [:td {:class "text-right"}
-           "Price"]
-          [:td (:review_count biz)]]]]]]]))
+     [:section {:id (section-id (:id biz))}
+      [:div {:class "media"}
+       [:a {:class "pull-left"}
+        [:img
+         {:class "media-object"
+          :style "width: 180px; height: auto; overflow: hidden;"
+          :src (:image_url biz)}]]
+       [:div
+        {:class "media-body"}
+        [:h4 {:class "list-group-item-heading"}
+         [:a {:href (:url biz)}
+          (:name biz)]]
+        [:table {:class "table table-condensed"}
+         [:tbody
+          [:tr
+           [:td {:class "text-right"}
+            "Categories"]
+           [:td (-> biz :categories first first)]]
+          [:tr 
+           [:td {:class "text-right"}
+            "Hood"]
+           [:td (-> biz :location :neighborhoods second)]]
+          [:tr
+           [:td {:class "text-right"}
+            "Rating"]
+           [:td (:rating biz)]]
+          [:tr
+           [:td {:class "text-right"}
+            "Reviews"]
+           [:td (:review_count biz)]]]]]]]]))
 
 (defn expand-biz-sidebar []
   (.setAttribute (dom/getElement "map-container")
@@ -187,15 +187,19 @@
      ;; Fetch and draw Yelp data
      (let [yelp-response (<! (http/get "http://localhost:3000/yelp"))
            businesses (-> yelp-response :body json-parse)
-           relevant-biz (find-businesses-on-the-way lat-lngs businesses)]
-       (doseq [biz relevant-biz]
-         (let [{:keys [name url]} biz
+           relevant-biz (find-businesses-on-the-way lat-lngs businesses)
+           numbered-biz (map #(assoc %1 :id %2)
+                             relevant-biz
+                             (iterate inc 1))]
+       (doseq [biz numbered-biz]
+         (let [{:keys [id name url]} biz
                {:keys [latitude longitude]} (-> biz :location :coordinate)]
-           (-> L (.marker [latitude, longitude]) 
-               (.addTo m)
-               (.bindPopup (str "<a href=\"" url "\">" name "</a>"))
-               (.openPopup))))
-       (dommy/append! (sel1 :#biz-container) (biz-template businesses))
+           (add-numbered-marker latitude longitude id)
+           (comment (-> L (.marker [latitude, longitude]) 
+                        (.addTo m)
+                        (.bindPopup (str "<a href=\"" url "\">" name "</a>"))
+                        (.openPopup)))))
+       (dommy/append! (sel1 :#biz-container) (biz-template numbered-biz))
        (expand-biz-sidebar) ;; reduce map size to allow for biz sidebar
        (.fitBounds m
                    [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
