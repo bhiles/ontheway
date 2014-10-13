@@ -84,6 +84,12 @@
                               :id "examples.map-i875mjb7"})
       (.addTo m)))
 
+(defn add-numbered-marker [lat lng num]
+  (let [NumberedDivIcon (.-NumberedDivIcon js/L)]
+    (-> L (.marker [lat, lng]
+                   {:icon (NumberedDivIcon. {:number (str num)})})
+        (.addTo mappy))))
+
 (defn url-encode [s]
   (js/encodeURIComponent s))
 

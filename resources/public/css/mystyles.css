@@ -1,3 +1,7 @@
+td {
+    border-top: none !important;
+}
+
 .no-right-padding {
    padding-right: 0 !important;
 }
@@ -7,6 +11,24 @@
     text-align: right !important;
 }
 
-td {
-    border-top: none !important;
+.leaflet-div-icon {
+    background: transparent !important;
+    border: none !important;
+}
+ 
+.leaflet-marker-icon .number 
+{
+    background-color: #FFFFFF;
+    border-radius: 5px 5px 5px 5px;
+    position: relative;
+    top: -36px;    
+    font-size: 9px;
+    width: 16px;
+    right: -5px;
+    text-align: center;
+}
+
+.leaflet-marker-icon img
+{
+    width: 25px;
 }
