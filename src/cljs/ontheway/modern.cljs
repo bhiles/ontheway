@@ -1,5 +1,5 @@
 (ns ontheway.modern
-  (:use-macros [dommy.macros :only [deftemplate sel1]])
+  (:use-macros [dommy.macros :only [deftemplate sel1 sel]])
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs-http.client :as http]
             [cljs.core.async :refer [put! chan <!]]
@@ -29,9 +29,6 @@
 
 (defn remove-explanation-text []
   (.remove (dom/getElement "explanation")))
-
-(deftemplate simple-template [cat]
-    [:img {:src cat}])
 
 (defn section-id [num]
   (str "biz-" num))
@@ -90,6 +87,33 @@
                    {:icon (NumberedDivIcon. {:number (str num)})})
         (.on "click" #(aset js/window "location" (str "#" (section-id num))))
         (.addTo mappy))))
+
+(defn add-numbered-marker-active [lat lng num]
+  (let [NumberedDivIconActive (.-NumberedDivIconActive js/L)]
+    (-> L (.marker [lat, lng]
+                   {:icon (NumberedDivIconActive. {:number (str num)})})
+        (.on "click" #(aset js/window "location" (str "#" (section-id num))))
+        (.addTo mappy))))
+
+;; Allows handling Nodelist like a seq
+(extend-type js/NodeList
+  ISeqable
+  (-seq [array] (array-seq array 0)))
+
+(defn find-marker-3 []
+  (first (js->clj (dom/getElementsByClass "number"))))
+
+(defn find-marker-4 []
+  (first (dom/getElementsByClass "number")))
+
+(defn find-marker-2 []
+  (dom/getElementsByClass "number"))
+
+(defn remove-marker [num]
+  (if-let [element (first
+                    (filter #(= (str num) (.-innerText %))
+                            (dom/getElementsByClass "number")))]
+    (-> element .-parentNode .remove)))
 
 (defn url-encode [s]
   (js/encodeURIComponent s))
@@ -197,10 +221,26 @@
                {:keys [latitude longitude]} (-> biz :location :coordinate)]
            (add-numbered-marker latitude longitude id)))
        (dommy/append! (sel1 :#biz-container) (biz-template numbered-biz))
+       (doseq [biz numbered-biz]
+         (let [{:keys [id name url]} biz
+               {:keys [latitude longitude]} (-> biz :location :coordinate)
+               mouseover (listen (dom/getElement (section-id (:id biz))) "mouseover")
+               mouseout (listen (dom/getElement (section-id (:id biz))) "mouseout")]
+           (go
+            (while true
+              (<! mouseover)
+              (remove-marker id)
+              (add-numbered-marker-active latitude longitude id)))
+           (go
+            (while true
+              (<! mouseout)
+              (remove-marker id)
+              (add-numbered-marker latitude longitude id)))))
        (expand-biz-sidebar) ;; reduce map size to allow for biz sidebar
        (.fitBounds m
                    [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
                     [(:ne-lat map-bounds) (:ne-lng map-bounds)]])
+
        ))))
 
 (let [clicks (listen (dom/getElement "btn-go") "click")]
