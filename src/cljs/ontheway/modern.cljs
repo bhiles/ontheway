@@ -33,7 +33,16 @@
 (defn section-id [num]
   (str "biz-" num))
 
-(deftemplate biz-template [businesses]
+(defn google-maps-url [start way-point destination]
+  (let [[start-lat start-lng] start
+        [way-lat way-lng] way-point
+        [dest-lat dest-lng] destination]
+    (str "https://www.google.com/maps/dir/"
+         start-lat "," start-lng "/"
+         way-lat "," way-lng "/"
+         dest-lat "," dest-lng "/")))
+
+(deftemplate biz-template [start-point end-point businesses]
   (for [biz businesses]
     [:div {:class "row"}
      [:section {:id (section-id (:id biz))}
@@ -45,7 +54,7 @@
           :src (:image_url biz)}]]
        [:div
         {:class "media-body"}
-        [:h4 {:class "list-group-item-heading"}
+        [:h4
          [:a {:href (:url biz)}
           (str (:id biz) ". " (:name biz))]]
         [:table {:class "table table-condensed"}
@@ -64,7 +73,20 @@
           [:tr
            [:td {:class "text-right"}
             "Reviews"]
-           [:td (:review_count biz)]]]]]]]]))
+           [:td (:review_count biz)]]
+          [:tr
+           [:td {:class "text-right"}]
+           [:td
+            [:small
+             [:a
+              {:href (google-maps-url start-point
+                                      (-> biz
+                                          :location
+                                          :coordinate
+                                          (select-keys [:latitude :longitude])
+                                          vals)
+                                      end-point)}
+              "Directions"]]]]]]]]]]))
 
 (defn expand-biz-sidebar []
   (.setAttribute (dom/getElement "map-container")
@@ -174,9 +196,7 @@
   (->> businesses
        (remove :is_closed)
        (sort-by (juxt :rating :review_count))
-       reverse
-       ;;(take 40)
-       ))
+       reverse))
 
 (defn json-parse [s]
   (js->clj
@@ -202,7 +222,9 @@
                         :end-lat end-lat
                         :end-lng end-lng}))
                    steps)
-         ;; TODO: missing last lat-lng
+         start-point (-> lat-lngs first (select-keys [:start-lat :start-lng]) vals)
+         end-point (-> lat-lngs last (select-keys [:end-lat :end-lng]) vals)
+         ;;end-point [45.5219757 -122.6822918]
          last-lat-lng (last lat-lngs)
          lines (concat
                 (map
@@ -232,7 +254,8 @@
          (let [{:keys [id name url]} biz
                {:keys [latitude longitude]} (-> biz :location :coordinate)]
            (add-numbered-marker latitude longitude id)))
-       (dommy/append! (sel1 :#biz-container) (biz-template numbered-biz))
+       (dommy/append! (sel1 :#biz-container)
+                      (biz-template start-point end-point numbered-biz))
        (doseq [biz numbered-biz]
          (let [{:keys [id name url]} biz
                {:keys [latitude longitude]} (-> biz :location :coordinate)

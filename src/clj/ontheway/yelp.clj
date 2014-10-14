@@ -45,13 +45,14 @@
                                 "sort" "0"}))
 
 (defn fetch-businesses-bounds [bounds]
-  (loop [offset 0
-         coll []]
-    (let [response (yelp-api-bounds bounds offset)
-          businesses (:businesses response)]
-      (if (or (empty? businesses) (>= (count coll) 100))
-        coll
-        (recur (+ offset 20) (concat coll businesses))))))
+  (let [max-count 100]
+    (loop [offset 0
+           coll []]
+      (let [response (yelp-api-bounds bounds offset)
+            businesses (:businesses response)]
+        (if (or (empty? businesses) (>= (count coll) max-count))
+          coll
+          (recur (+ offset 20) (concat coll businesses)))))))
 
 (comment
   ;; this is a helper to test yelp queries
