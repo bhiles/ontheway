@@ -47,17 +47,16 @@
         {:class "media-body"}
         [:h4 {:class "list-group-item-heading"}
          [:a {:href (:url biz)}
-          (:name biz)]]
+          (str (:id biz) ". " (:name biz))]]
         [:table {:class "table table-condensed"}
          [:tbody
           [:tr
            [:td {:class "text-right"}
             "Categories"]
-           [:td (-> biz :categories first first)]]
-          [:tr 
-           [:td {:class "text-right"}
-            "Hood"]
-           [:td (-> biz :location :neighborhoods second)]]
+           [:td (->> (:categories biz)
+                     (mapcat
+                      (fn [c]
+                        [(first c) [:br]])))]]
           [:tr
            [:td {:class "text-right"}
             "Rating"]
@@ -171,6 +170,12 @@
           bounding-boxes)))
      businesses)))
 
+(defn sort-filter-businesses [businesses]
+  (->> businesses
+       (remove :is_closed)
+       (sort-by (juxt :rating :review_count))
+       reverse))
+
 (defn json-parse [s]
   (js->clj
    (.parse js/JSON s)
@@ -212,7 +217,9 @@
      ;; Fetch and draw Yelp data
      (let [yelp-response (<! (http/get "http://localhost:3000/yelp"))
            businesses (-> yelp-response :body json-parse)
-           relevant-biz (find-businesses-on-the-way lat-lngs businesses)
+           relevant-biz (->> businesses
+                             (find-businesses-on-the-way lat-lngs)
+                             sort-filter-businesses)
            numbered-biz (map #(assoc %1 :id %2)
                              relevant-biz
                              (iterate inc 1))]
