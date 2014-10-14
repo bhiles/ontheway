@@ -174,7 +174,9 @@
   (->> businesses
        (remove :is_closed)
        (sort-by (juxt :rating :review_count))
-       reverse))
+       reverse
+       ;;(take 40)
+       ))
 
 (defn json-parse [s]
   (js->clj
@@ -215,7 +217,10 @@
                  [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
                   [(:ne-lat map-bounds) (:ne-lng map-bounds)]])
      ;; Fetch and draw Yelp data
-     (let [yelp-response (<! (http/get "http://localhost:3000/yelp"))
+     (let [yelp-response (<! (http/get
+                              (str "http://localhost:3000/yelp-bounds?bounds="
+                                   (:sw-lat map-bounds) "," (:sw-lng map-bounds) "|"
+                                   (:ne-lat map-bounds) "," (:ne-lng map-bounds))))
            businesses (-> yelp-response :body json-parse)
            relevant-biz (->> businesses
                              (find-businesses-on-the-way lat-lngs)

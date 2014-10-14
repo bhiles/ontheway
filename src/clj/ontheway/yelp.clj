@@ -25,7 +25,6 @@
                                                   "term" "food"
                                                   "location" "Portland, OR"
                                                   "sort" "0"})]
-
         (mem/set memcache-conn key 0 (json/write-str new-val))
         new-val))))
 
@@ -37,3 +36,29 @@
       (if (empty? businesses)
         coll
         (recur (+ offset 20) (concat coll businesses))))))
+
+(defn yelp-api-bounds [bounds offset]
+  (yelp-client/business-search yelp-conn
+                               {"offset" offset
+                                "bounds" bounds
+                                "term" "food"
+                                "sort" "0"}))
+
+(defn fetch-businesses-bounds [bounds]
+  (loop [offset 0
+         coll []]
+    (let [response (yelp-api-bounds bounds offset)
+          businesses (:businesses response)]
+      (if (or (empty? businesses) (>= (count coll) 100))
+        coll
+        (recur (+ offset 20) (concat coll businesses))))))
+
+(comment
+  ;; this is a helper to test yelp queries
+  (defn yelp-query [offset]
+           (yelp-client/business-search yelp-conn
+                                        {"offset" offset
+                                         "term" "food"
+                                         ;;"bounds" "45.5229568,-122.6836258|45.5307952,-122.6812918"
+                                         "location" "Pearl District, Portland, OR"
+                                         "sort" "2"})))

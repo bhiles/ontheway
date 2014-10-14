@@ -102,6 +102,9 @@
 (defroutes app-routes
   (GET "/" [] "<p>Hello from compojure</p>")
   (GET "/yelp" [] (json/write-str (yelp/fetch-businesses)))
+  (GET "/yelp-bounds" {params :params}
+       (json/write-str
+        (yelp/fetch-businesses-bounds (:bounds params))))
   (route/resources "/")
   (route/not-found "Page not found"))
 
