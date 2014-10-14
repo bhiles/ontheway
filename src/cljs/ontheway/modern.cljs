@@ -233,8 +233,14 @@
                  lat-lngs)
                 [[(:end-lat last-lat-lng) (:end-lng last-lat-lng)]])
          map-bounds (max-box-corners lat-lngs)]
+     ;; draw start/end points
+     (-> L (.circle (vec start-point) 8 {:color "green"})
+         (.addTo m))
+     (-> L (.circle (vec end-point) 8 {:color "red"})
+         (.addTo m))
+     ;; draw map directions
      (-> L (.polyline lines)
-         (.addTo m)) ;; draw map directions
+         (.addTo m)) 
      (.fitBounds m
                  [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
                   [(:ne-lat map-bounds) (:ne-lng map-bounds)]])
