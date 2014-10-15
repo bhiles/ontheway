@@ -146,8 +146,7 @@
 
 (defn json-parse [s]
   (js->clj
-   (.parse js/JSON s)
-   :keywordize-keys true))
+   (.parse js/JSON s)))
 
 (defn fetch-google-lat-lngs [to from]
   (go
@@ -216,7 +215,7 @@
                                    (:sw-lat map-bounds) "," (:sw-lng map-bounds) "|"
                                    (:ne-lat map-bounds) "," (:ne-lng map-bounds))
            yelp-response (<! (http/get yelp-url))
-           businesses (-> yelp-response :body json-parse)
+           businesses (-> yelp-response :body)
            relevant-biz (->> businesses
                              (find-businesses-on-the-way lat-lngs)
                              sort-filter-businesses)
