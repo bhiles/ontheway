@@ -14,11 +14,16 @@
                    (fn [e] (put! out e)))
     out))
 
+(def autocompleteFrom (google.maps.places.Autocomplete.
+                       (dom/getElement "directions-from")))
+(def autocompleteTo (google.maps.places.Autocomplete.
+                       (dom/getElement "directions-to")))
+
 (defn from-query []
-  (.-value (dom/getElement "directions-from")))
+  (-> autocompleteFrom .getPlace .-formatted_address))
 
 (defn to-query []
-  (.-value (dom/getElement "directions-to")))
+  (-> autocompleteTo .getPlace .-formatted_address))
 
 (defn section-id [num]
   (str "biz-" num))
