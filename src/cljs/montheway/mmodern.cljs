@@ -225,7 +225,8 @@
      (let [yelp-url (str "http://localhost:3000/yelp-bounds?bounds="
                                    (:sw-lat map-bounds) "," (:sw-lng map-bounds) "|"
                                    (:ne-lat map-bounds) "," (:ne-lng map-bounds))
-           yelp-response (<! (http/get yelp-url))
+           yelp-url-2 "http://dipity.bennetthiles.com/yelp-bounds?bounds=45.5179568%2C-122.6886258%7C45.5357952%2C-122.6762918"
+           yelp-response (<! (http/get yelp-url-2))
            businesses (-> yelp-response :body)
            relevant-biz (->> businesses
                              (find-businesses-on-the-way lat-lngs)
