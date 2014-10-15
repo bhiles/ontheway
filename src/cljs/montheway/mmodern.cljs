@@ -186,7 +186,7 @@
          response (<! (http/get url))]
      (if (contains? response :trace-redirects)
        (do
-         (let [redirect-url (-> response :trace-redirects first)
+         (let [redirect-url (-> response :trace-redirects last)
                r-response (<! (http/get (-> response :trace-redirects first)))]
            (dommy/append! (sel1 :body) [:p (str  "Mapquest redirect-url:"
                                                  redirect-url)])
