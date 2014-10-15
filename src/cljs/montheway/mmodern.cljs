@@ -175,23 +175,31 @@
                       "routeType" "fastest"
                       "narrativeType" "none"
                       "shapeFormat" "raw"
-                      "generalize" "0"}
+                      "generalize" "0"
+                      "outFormat" "json"}
         uri "http://www.mapquestapi.com/directions/v2/route"]
     (mk-uri uri query-params)))
 
 (defn fetch-mapquest-lat-lngs [to from]
   (go
    (let [url (mapquest-uri to from)
-         response (<! (http/get url))
-         steps (-> response
-                   :body :route :shape :shapePoints)
-         lat-lngs (map
-                   (fn [[start-lat start-lng end-lat end-lng]]
-                     {:start-lat start-lat
-                      :start-lng start-lng
-                      :end-lat end-lat
-                      :end-lng end-lng})
-                   (partition 4 2 steps))]
+         response (<! (http/get url))]
+     (if (contains? response :trace-redirects)
+       (do
+         (let [redirect-url (-> response :trace-redirects first)
+               r-response (<! (http/get (-> response :trace-redirects first)))]
+           (dommy/append! (sel1 :body) [:p (str  "Mapquest redirect-url:"
+                                                 redirect-url)])
+           (dommy/append! (sel1 :body) [:p (str  "Mapquest query:" r-response)]))))
+     steps (-> response
+                    :body :route :shape :shapePoints)
+     lat-lngs (map
+                    (fn [[start-lat start-lng end-lat end-lng]]
+                      {:start-lat start-lat
+                       :start-lng start-lng
+                       :end-lat end-lat
+                       :end-lng end-lng})
+                    (partition 4 2 steps))
      (dommy/append! (sel1 :body) [:p (str  "Mapquest data:" response)])
      lat-lngs)))
 
