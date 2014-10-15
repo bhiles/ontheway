@@ -207,7 +207,7 @@
   "Returns steps in the format
   [{:start-lat :start-lng :end-lat :end-lng}, ...]"
   (go
-   (let [lat-lngs (<! (fetch-mapquest-lat-lngs to from))
+   (let [lat-lngs (<! (fetch-google-lat-lngs to from))
          start-point (-> lat-lngs first (select-keys [:start-lat :start-lng]) vals)
          end-point (-> lat-lngs last (select-keys [:end-lat :end-lng]) vals)
          last-lat-lng (last lat-lngs)
