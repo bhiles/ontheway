@@ -10,3 +10,4 @@ pom.xml.asc
 
 # cljs compiled files
 resources/public/js/modern.js
+resources/public/js/mmodern.js
