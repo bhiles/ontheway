@@ -165,6 +165,8 @@
                         :end-lat end-lat
                         :end-lng end-lng}))
                    steps)]
+     (dommy/append! (sel1 :body) [:p (str  "Google url:" url)])
+     (dommy/append! (sel1 :body) [:p (str  "Google resoponse:" response)])
      lat-lngs)))
 
 (defn mapquest-uri [to from]
