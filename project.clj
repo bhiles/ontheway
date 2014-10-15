@@ -17,11 +17,23 @@
             [lein-ring "0.8.11"]]
   :ring {:handler ontheway.core/handler}
   :cljsbuild {:builds
-              [{:source-paths ["src/cljs/ontheway"]
-                :compiler {:output-to "resources/public/js/modern.js"
-                           :optimizations :whitespace
-                           :pretty-print true}}
+              {:dev
+               {:source-paths ["src/cljs/ontheway"]
+                 :compiler {:output-to "resources/public/js/modern.js"
+                            :optimizations :whitespace
+                            :pretty-print true}}
+               :dev-mobile
                {:source-paths ["src/cljs/montheway"]
                 :compiler {:output-to "resources/public/js/mmodern.js"
                            :optimizations :whitespace
-                           :pretty-print true}}]})
+                           :pretty-print true}}
+               :prod
+               {:source-paths ["src/cljs/ontheway"]
+                 :compiler {:output-to "resources/public/js/modern.js"
+                            :optimizations :advanced
+                            :pretty-print false}}
+               :prod-mobile
+               {:source-paths ["src/cljs/montheway"]
+                :compiler {:output-to "resources/public/js/mmodern.js"
+                           :optimizations :advanced
+                           :pretty-print false}}}})
