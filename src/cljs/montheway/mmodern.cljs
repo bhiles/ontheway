@@ -90,6 +90,9 @@
        (clojure.string/join "&"
              (map (fn [[k v]] (str k "=" (url-encode v))) query-params))))
 
+(defn proxy-url [url]
+  (str "http://localhost:3000/proxy?url=" (url-encode url)))
+
 (defn directions-uri [to from]
   (let [query-params {"origin" to
                       "destination" from
@@ -150,7 +153,7 @@
 
 (defn fetch-google-lat-lngs [to from]
   (go
-   (let [url (directions-uri to from)
+   (let [url (proxy-url (directions-uri to from))
          response (<! (http/get url))
          steps (-> response
                    :body :routes first :legs first :steps)
@@ -184,7 +187,7 @@
 
 (defn fetch-mapquest-lat-lngs [to from]
   (go
-   (let [url (mapquest-uri to from)
+   (let [url (proxy-url (mapquest-uri to from))
          response (<! (http/get url))]
      (if (contains? response :trace-redirects)
        (do
@@ -209,7 +212,7 @@
   "Returns steps in the format
   [{:start-lat :start-lng :end-lat :end-lng}, ...]"
   (go
-   (let [lat-lngs (<! (fetch-google-lat-lngs to from))
+   (let [lat-lngs (<! (fetch-mapquest-lat-lngs to from))
          start-point (-> lat-lngs first (select-keys [:start-lat :start-lng]) vals)
          end-point (-> lat-lngs last (select-keys [:end-lat :end-lng]) vals)
          last-lat-lng (last lat-lngs)
@@ -225,7 +228,7 @@
      (let [yelp-url (str "http://localhost:3000/yelp-bounds?bounds="
                                    (:sw-lat map-bounds) "," (:sw-lng map-bounds) "|"
                                    (:ne-lat map-bounds) "," (:ne-lng map-bounds))
-           yelp-url-2 "http://dipity.bennetthiles.com/yelp-bounds?bounds=45.5179568%2C-122.6886258%7C45.5357952%2C-122.6762918"
+           yelp-url-2 "http://localhost:3000/yelp-bounds?bounds=45.5179568%2C-122.6886258%7C45.5357952%2C-122.6762918"
            yelp-response (<! (http/get yelp-url-2))
            businesses (-> yelp-response :body)
            relevant-biz (->> businesses
@@ -237,7 +240,7 @@
        (dommy/append! (sel1 :body)
                       [:p (str "Fetched yelp url: " yelp-url-2)])
        (dommy/append! (sel1 :body)
-                      [:p (str "Fetched yelp data: " (count numbered-biz))])
+                      [:p (str "Fetched yelp data: " (count businesses))])
        (dommy/append! (sel1 :#biz-container)
                       (biz-template start-point end-point numbered-biz))
        (dommy/append! (sel1 :body) [:p "Done with yelp data"])

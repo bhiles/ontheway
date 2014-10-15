@@ -12,7 +12,8 @@
                  [net.drib/blade "0.1.0"]
                  [prismatic/dommy "0.1.3"]
                  [gws/yelp "0.2.0"]
-                 [cljs-http "0.1.16"]]
+                 [cljs-http "0.1.16"]
+                 [clj-http "1.0.0"]]
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-ring "0.8.11"]]
   :ring {:handler ontheway.core/handler}

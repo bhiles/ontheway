@@ -1,12 +1,15 @@
 (ns ontheway.core
   (:use [compojure.core]
+        [ring.util.response :only [header response]]
         [clojure.string :only [join]]
         [clojure.walk :only [keywordize-keys]])
   (:require [clojure.data.json :as json]
+            [clj-http.client :as http]
             [compojure.handler :as handler]
             [compojure.route :as route]
             [ontheway.yelp :as yelp])
-  (:import [java.net URLEncoder]))
+  (:import [java.net URLEncoder]
+           [java.io ByteArrayInputStream]))
 
 (defn foo
   "I don't do a whole lot."
@@ -16,8 +19,8 @@
 (defn json-response [data & [status]]
   {:status (or status 200)
    :headers {"Content-Type" "application/json"
-             "Access-Control-Allow-Origin" "*"
-             }
+             "Access-Control-Allow-Origin" "http://my.local.com:3000"
+             "Access-Control-Allow-Credentials" "true"}
    :body (json/write-str data)})
 
 (defn url-encode [s]
@@ -106,14 +109,42 @@
           bounding-boxes)))
      businesses)))
 
+(defn- add-original-headers [response headers]
+  (if (nil? headers)
+    response
+    (let [item (first headers)]
+      (recur
+        (header response (key item) (val item))
+        (next headers)))))
+
+(defn- add-cors-headers [response request-headers]
+  ; attribution: https://github.com/rm-hull/programming-enchiladas
+  (->
+   response
+   (header "Content-Type" "application/json")
+   (header "Access-Control-Allow-Credentials" "true")
+   (header "Access-Control-Allow-Origin" "http://my.local.com:3000")))
+
+(defn proxy-request [req]
+   (let [url (get-in req [:params :url])
+         resp (http/get url {:as :byte-array})]
+      (if (= (:status resp) 200)
+        (->
+          (response (ByteArrayInputStream. (:body resp)))
+          (add-original-headers (:headers resp))
+          (add-cors-headers (:headers req))
+          (header "x-proxied-by" "On the way")))))
+
 (defroutes app-routes
   (GET "/" [] "<p>Hello from compojure</p>")
   (GET "/yelp" [] (json/write-str (yelp/fetch-businesses)))
   (GET "/yelp-bounds" {params :params}
        (json-response
         (yelp/fetch-businesses-bounds (:bounds params))))
+  (GET "/proxy" [:as req] (proxy-request req))
   (route/resources "/")
-  (route/not-found "Page not found"))
+  (route/not-found "Page not found")
+)
 
 (def handler
   (handler/site app-routes))
