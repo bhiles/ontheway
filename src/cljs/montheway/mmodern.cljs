@@ -210,12 +210,12 @@
                  lat-lngs)
                 [[(:end-lat last-lat-lng) (:end-lng last-lat-lng)]])
          map-bounds (max-box-corners lat-lngs)]
-     (dommy/append! (sel1 :body) [:p "Fetched google data"])
+     (dommy/append! (sel1 :body) [:p (str  "Fetched google data:" (count lat-lngs))])
      ;; Fetch and draw Yelp data
-     (let [yelp-response (<! (http/get
-                              (str "http://localhost:3000/yelp-bounds?bounds="
+     (let [yelp-url (str "http://localhost:3000/yelp-bounds?bounds="
                                    (:sw-lat map-bounds) "," (:sw-lng map-bounds) "|"
-                                   (:ne-lat map-bounds) "," (:ne-lng map-bounds))))
+                                   (:ne-lat map-bounds) "," (:ne-lng map-bounds))
+           yelp-response (<! (http/get yelp-url))
            businesses (-> yelp-response :body json-parse)
            relevant-biz (->> businesses
                              (find-businesses-on-the-way lat-lngs)
@@ -223,6 +223,8 @@
            numbered-biz (map #(assoc %1 :id %2)
                              relevant-biz
                              (iterate inc 1))]
+       (dommy/append! (sel1 :body)
+                      [:p (str "Fetched yelp url: " yelp-url)])
        (dommy/append! (sel1 :body)
                       [:p (str "Fetched yelp data: " (count numbered-biz))])
        (dommy/append! (sel1 :#biz-container)

@@ -13,6 +13,11 @@
   [x]
   (println x "Hello, World!"))
 
+(defn json-response [data & [status]]
+  {:status (or status 200)
+   :headers {"Content-Type" "application/json"}
+   :body (json/write-str data)})
+
 (defn url-encode [s]
   (URLEncoder/encode s))
 
@@ -103,7 +108,7 @@
   (GET "/" [] "<p>Hello from compojure</p>")
   (GET "/yelp" [] (json/write-str (yelp/fetch-businesses)))
   (GET "/yelp-bounds" {params :params}
-       (json/write-str
+       (json-response
         (yelp/fetch-businesses-bounds (:bounds params))))
   (route/resources "/")
   (route/not-found "Page not found"))
