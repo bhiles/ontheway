@@ -223,7 +223,8 @@
            numbered-biz (map #(assoc %1 :id %2)
                              relevant-biz
                              (iterate inc 1))]
-       (dommy/append! (sel1 :body) [:p "Fetched yelp data"])
+       (dommy/append! (sel1 :body)
+                      [:p (str "Fetched yelp data: " (count numbered-biz))])
        (dommy/append! (sel1 :#biz-container)
                       (biz-template start-point end-point numbered-biz))
        (dommy/append! (sel1 :body) [:p "Done with yelp data"])
@@ -233,5 +234,6 @@
   (go (while true
         (<! clicks) ;; wait for a click
         (dommy/append! (sel1 :body) [:p "Hi there"])
-        (direction-steps nil (from-query) (to-query)) ;; draw map's directions
+        (direction-steps nil "1200 NW Marshall Street, Portland, OR"
+                         "1005 W Burnside St Portland, OR") ;; draw map's directions
         )))
