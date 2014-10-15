@@ -192,6 +192,7 @@
                       :end-lat end-lat
                       :end-lng end-lng})
                    (partition 4 2 steps))]
+     (dommy/append! (sel1 :body) [:p (str  "Mapquest data:" response)])
      lat-lngs)))
 
 (defn direction-steps [m to from]
