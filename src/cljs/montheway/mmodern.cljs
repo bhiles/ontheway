@@ -32,7 +32,7 @@
          dest-lat "," dest-lng "/")))
 
 (deftemplate biz-template [start-point end-point businesses]
-  (for [biz businesses]
+  (for [biz (take 2 businesses)]
     [:div {:class "row"}
      [:section {:id (section-id (:id biz))}
       [:div {:class "media"}
@@ -210,6 +210,7 @@
                  lat-lngs)
                 [[(:end-lat last-lat-lng) (:end-lng last-lat-lng)]])
          map-bounds (max-box-corners lat-lngs)]
+     (dommy/append! (sel1 :body) [:p "Fetched google data"])
      ;; Fetch and draw Yelp data
      (let [yelp-response (<! (http/get
                               (str "http://localhost:3000/yelp-bounds?bounds="
@@ -222,8 +223,11 @@
            numbered-biz (map #(assoc %1 :id %2)
                              relevant-biz
                              (iterate inc 1))]
+       (dommy/append! (sel1 :body) [:p "Fetched yelp data"])
        (dommy/append! (sel1 :#biz-container)
-                      (biz-template start-point end-point numbered-biz))))))
+                      (biz-template start-point end-point numbered-biz))
+       (dommy/append! (sel1 :body) [:p "Done with yelp data"])
+       ))))
 
 (let [clicks (listen (dom/getElement "mobile-btn-go") "click")]
   (go (while true
