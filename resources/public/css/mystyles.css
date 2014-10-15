@@ -1,3 +1,5 @@
+div { cursor: pointer; }
+
 td {
     border-top: none !important;
 }

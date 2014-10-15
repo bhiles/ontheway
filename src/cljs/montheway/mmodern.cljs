@@ -228,5 +228,6 @@
 (let [clicks (listen (dom/getElement "mobile-btn-go") "click")]
   (go (while true
         (<! clicks) ;; wait for a click
+        (dommy/append! (sel1 :body) [:p "Hi there"])
         (direction-steps nil (from-query) (to-query)) ;; draw map's directions
         )))
