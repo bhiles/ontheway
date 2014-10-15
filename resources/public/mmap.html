@@ -12,11 +12,7 @@
     <link rel="stylesheet" href="css/mystyles.css"/>
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
     <link rel="stylesheet" href="css/leaflet.css" />
-
-    <script type="text/javascript" src="js/ArrayLikeIsArray.js"></script>
-    <script type="text/javascript" src="js/jquery.min.js"></script>
-    <script type="text/javascript" src="js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="js/mmodern.js"></script>  
+  
   </head>
 
   <body>
@@ -85,6 +81,26 @@
         </div>
       </div>
     </div>
+
+    <script>
+
+      http = new XMLHttpRequest();
+
+      http.open("GET", "/yelp-bounds?bounds=45.5179568,-122.6886258|45.5357952,-122.6762918");
+      http.onreadystatechange=function() {
+      if(http.readyState == 4) {
+      // alert(http.responseText);
+      }
+      }
+      http.send(null);
+
+    </script>
+
+
+    <script type="text/javascript" src="js/ArrayLikeIsArray.js"></script>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/mmodern.js"></script>
 
   </body>
 </html>
