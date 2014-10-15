@@ -33,7 +33,7 @@
          dest-lat "," dest-lng "/")))
 
 (deftemplate biz-template [start-point end-point businesses]
-  (for [biz (take 2 businesses)]
+  (for [biz businesses]
     [:div {:class "row"}
      [:section {:id (section-id (:id biz))}
       [:div {:class "media"}
@@ -169,8 +169,6 @@
                         :end-lat end-lat
                         :end-lng end-lng}))
                    steps)]
-     (dommy/append! (sel1 :body) [:p (str  "Google url:" url)])
-     (dommy/append! (sel1 :body) [:p (str  "Google resoponse:" response)])
      lat-lngs)))
 
 (defn mapquest-uri [to from]
@@ -199,7 +197,6 @@
                       :end-lat end-lat
                       :end-lng end-lng})
                    (partition 4 2 steps))]
-     (dommy/append! (sel1 :body) [:p (str  "Mapquest data:" response)])
      lat-lngs)))
 
 (defn direction-steps [m to from]
@@ -217,7 +214,6 @@
                  lat-lngs)
                 [[(:end-lat last-lat-lng) (:end-lng last-lat-lng)]])
          map-bounds (max-box-corners lat-lngs)]
-     (dommy/append! (sel1 :body) [:p (str  "Fetched lat-lngs: " lat-lngs)])
      ;; Fetch and draw Yelp data
      (let [yelp-url (str config/hostname "/yelp-bounds?bounds="
                                    (:sw-lat map-bounds) "," (:sw-lng map-bounds) "|"
@@ -230,18 +226,11 @@
            numbered-biz (map #(assoc %1 :id %2)
                              relevant-biz
                              (iterate inc 1))]
-       (dommy/append! (sel1 :body)
-                      [:p (str "Fetched yelp url: " yelp-url)])
-       (dommy/append! (sel1 :body)
-                      [:p (str "Fetched yelp data: " (count businesses))])
        (dommy/append! (sel1 :#biz-container)
-                      (biz-template start-point end-point numbered-biz))
-       (dommy/append! (sel1 :body) [:p "Done with yelp data"])))))
+                      (biz-template start-point end-point numbered-biz))))))
 
 (let [clicks (listen (dom/getElement "mobile-btn-go") "click")]
   (go (while true
         (<! clicks) ;; wait for a click
-        (dommy/append! (sel1 :body) [:p "Hi there"])
-        (direction-steps nil "1200 NW Marshall Street, Portland, OR"
-                         "1005 W Burnside St Portland, OR") ;; draw map's directions
+        (direction-steps nil (from-query) (to-query)) ;; draw map's directions
         )))
