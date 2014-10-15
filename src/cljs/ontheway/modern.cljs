@@ -15,18 +15,22 @@
 ;; (def tile-url "https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png")
 (def tile-url "http://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}")
 (def mappy (-> L (.map "mappy")))
+(def autocompleteFrom (google.maps.places.Autocomplete.
+                       (dom/getElement "directions-from")))
+(def autocompleteTo (google.maps.places.Autocomplete.
+                       (dom/getElement "directions-to")))
 
 (defn listen [el type]
   (let [out (chan)]
     (events/listen el type
-                   (fn [e] (put! out e)))
+      (fn [e] (put! out e)))
     out))
-
+   
 (defn from-query []
-  (.-value (dom/getElement "directions-from")))
+  (-> autocompleteFrom .getPlace .-formatted_address))
 
 (defn to-query []
-  (.-value (dom/getElement "directions-to")))
+  (-> autocompleteTo .getPlace .-formatted_address))
 
 (defn remove-explanation-text []
   (.remove (dom/getElement "explanation")))
@@ -284,7 +288,7 @@
                               (str config/hostname "/yelp-bounds?bounds="
                                    (:sw-lat map-bounds) "," (:sw-lng map-bounds) "|"
                                    (:ne-lat map-bounds) "," (:ne-lng map-bounds))))
-           businesses (-> yelp-response :body json-parse)
+           businesses (-> yelp-response :body)
            relevant-biz (->> businesses
                              (find-businesses-on-the-way lat-lngs)
                              sort-filter-businesses)
