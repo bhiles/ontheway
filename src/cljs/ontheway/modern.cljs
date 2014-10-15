@@ -247,11 +247,6 @@
                       :end-lat end-lat
                       :end-lng end-lng})
                    (partition 4 2 steps))]
-     (prn lat-lngs)
-     (prn steps)
-     ;;(prn response)
-     (.log js/console lat-lngs)
-     (.log js/console steps)
      lat-lngs)))
 
 (defn direction-steps [m to from]
