@@ -15,7 +15,9 @@
 
 (defn json-response [data & [status]]
   {:status (or status 200)
-   :headers {"Content-Type" "application/json"}
+   :headers {"Content-Type" "application/json"
+             "Access-Control-Allow-Origin" "*"
+             }
    :body (json/write-str data)})
 
 (defn url-encode [s]
