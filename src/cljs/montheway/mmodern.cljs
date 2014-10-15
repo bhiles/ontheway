@@ -5,7 +5,8 @@
             [cljs.core.async :refer [put! chan <!]]
             [goog.dom :as dom]
             [goog.events :as events]
-            [dommy.core :as dommy]))
+            [dommy.core :as dommy]
+            [ontheway.config :as config]))
 
 (defn listen [el type]
   (let [out (chan)]
@@ -91,7 +92,7 @@
              (map (fn [[k v]] (str k "=" (url-encode v))) query-params))))
 
 (defn proxy-url [url]
-  (str "http://localhost:3000/proxy?url=" (url-encode url)))
+  (str config/hostname "/proxy?url=" (url-encode url)))
 
 (defn directions-uri [to from]
   (let [query-params {"origin" to
@@ -188,23 +189,16 @@
 (defn fetch-mapquest-lat-lngs [to from]
   (go
    (let [url (proxy-url (mapquest-uri to from))
-         response (<! (http/get url))]
-     (if (contains? response :trace-redirects)
-       (do
-         (let [redirect-url (-> response :trace-redirects last)
-               r-response (<! (http/get (-> response :trace-redirects first)))]
-           (dommy/append! (sel1 :body) [:p (str  "Mapquest redirect-url:"
-                                                 redirect-url)])
-           (dommy/append! (sel1 :body) [:p (str  "Mapquest query:" r-response)]))))
-     steps (-> response
-                    :body :route :shape :shapePoints)
-     lat-lngs (map
-                    (fn [[start-lat start-lng end-lat end-lng]]
-                      {:start-lat start-lat
-                       :start-lng start-lng
-                       :end-lat end-lat
-                       :end-lng end-lng})
-                    (partition 4 2 steps))
+         response (<! (http/get url))
+         steps (-> response
+                   :body :route :shape :shapePoints)
+         lat-lngs (map
+                   (fn [[start-lat start-lng end-lat end-lng]]
+                     {:start-lat start-lat
+                      :start-lng start-lng
+                      :end-lat end-lat
+                      :end-lng end-lng})
+                   (partition 4 2 steps))]
      (dommy/append! (sel1 :body) [:p (str  "Mapquest data:" response)])
      lat-lngs)))
 
@@ -223,13 +217,12 @@
                  lat-lngs)
                 [[(:end-lat last-lat-lng) (:end-lng last-lat-lng)]])
          map-bounds (max-box-corners lat-lngs)]
-     (dommy/append! (sel1 :body) [:p (str  "Fetched google data:" (count lat-lngs))])
+     (dommy/append! (sel1 :body) [:p (str  "Fetched lat-lngs: " lat-lngs)])
      ;; Fetch and draw Yelp data
-     (let [yelp-url (str "http://localhost:3000/yelp-bounds?bounds="
+     (let [yelp-url (str config/hostname "/yelp-bounds?bounds="
                                    (:sw-lat map-bounds) "," (:sw-lng map-bounds) "|"
                                    (:ne-lat map-bounds) "," (:ne-lng map-bounds))
-           yelp-url-2 "http://localhost:3000/yelp-bounds?bounds=45.5179568%2C-122.6886258%7C45.5357952%2C-122.6762918"
-           yelp-response (<! (http/get yelp-url-2))
+           yelp-response (<! (http/get yelp-url))
            businesses (-> yelp-response :body)
            relevant-biz (->> businesses
                              (find-businesses-on-the-way lat-lngs)
@@ -238,13 +231,12 @@
                              relevant-biz
                              (iterate inc 1))]
        (dommy/append! (sel1 :body)
-                      [:p (str "Fetched yelp url: " yelp-url-2)])
+                      [:p (str "Fetched yelp url: " yelp-url)])
        (dommy/append! (sel1 :body)
                       [:p (str "Fetched yelp data: " (count businesses))])
        (dommy/append! (sel1 :#biz-container)
                       (biz-template start-point end-point numbered-biz))
-       (dommy/append! (sel1 :body) [:p "Done with yelp data"])
-       ))))
+       (dommy/append! (sel1 :body) [:p "Done with yelp data"])))))
 
 (let [clicks (listen (dom/getElement "mobile-btn-go") "click")]
   (go (while true

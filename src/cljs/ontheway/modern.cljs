@@ -3,6 +3,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs-http.client :as http]
             [cljs.core.async :refer [put! chan <!]]
+            [ontheway.config :as config]
             [goog.dom :as dom]
             [goog.events :as events]
             [blade :refer [L]]
@@ -144,6 +145,9 @@
        (clojure.string/join "&"
              (map (fn [[k v]] (str k "=" (url-encode v))) query-params))))
 
+(defn proxy-url [url]
+  (str config/hostname "/proxy?url=" (url-encode url)))
+
 (defn directions-uri [to from]
   (let [query-params {"origin" to
                       "destination" from
@@ -205,7 +209,7 @@
 
 (defn fetch-google-lat-lngs [to from]
   (go
-   (let [url (directions-uri to from)
+   (let [url (proxy-url (directions-uri to from))
          response (<! (http/get url))
          steps (-> response
                    :body :routes first :legs first :steps)
@@ -236,7 +240,7 @@
 
 (defn fetch-mapquest-lat-lngs [to from]
   (go
-   (let [url (mapquest-uri to from)
+   (let [url (proxy-url (mapquest-uri to from))
          response (<! (http/get url))
          steps (-> response
                    :body :route :shape :shapePoints)
@@ -277,7 +281,7 @@
                   [(:ne-lat map-bounds) (:ne-lng map-bounds)]])
      ;; Fetch and draw Yelp data
      (let [yelp-response (<! (http/get
-                              (str "http://localhost:3000/yelp-bounds?bounds="
+                              (str config/hostname "/yelp-bounds?bounds="
                                    (:sw-lat map-bounds) "," (:sw-lng map-bounds) "|"
                                    (:ne-lat map-bounds) "," (:ne-lng map-bounds))))
            businesses (-> yelp-response :body json-parse)

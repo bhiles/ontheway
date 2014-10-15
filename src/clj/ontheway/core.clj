@@ -7,6 +7,7 @@
             [clj-http.client :as http]
             [compojure.handler :as handler]
             [compojure.route :as route]
+            [ontheway.config :as config]
             [ontheway.yelp :as yelp])
   (:import [java.net URLEncoder]
            [java.io ByteArrayInputStream]))
@@ -19,7 +20,7 @@
 (defn json-response [data & [status]]
   {:status (or status 200)
    :headers {"Content-Type" "application/json"
-             "Access-Control-Allow-Origin" "http://my.local.com:3000"
+             "Access-Control-Allow-Origin" config/hostname
              "Access-Control-Allow-Credentials" "true"}
    :body (json/write-str data)})
 
@@ -123,7 +124,7 @@
    response
    (header "Content-Type" "application/json")
    (header "Access-Control-Allow-Credentials" "true")
-   (header "Access-Control-Allow-Origin" "http://my.local.com:3000")))
+   (header "Access-Control-Allow-Origin" config/hostname)))
 
 (defn proxy-request [req]
    (let [url (get-in req [:params :url])
