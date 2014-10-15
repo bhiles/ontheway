@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" 
-        content="width=device-width, initial-scale=1.0,
-                 maximum-scale=1, user-scalable=no">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" 
+          content="width=device-width, initial-scale=1.0,
+                   maximum-scale=1, user-scalable=no" />
+    
+    <title>On the Way</title>
   
-  <title>On the Way</title>
+    <link rel="stylesheet" href="css/mystyles.css"/>
+    <link rel="stylesheet" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="css/leaflet.css" />
   
-  <link rel="stylesheet" href="css/mystyles.css"/>
-  <link rel="stylesheet" href="css/bootstrap.min.css"/>
-  <link rel="stylesheet" href="css/leaflet.css" />
-  
-</head>
-<body>
-  <div class="container">
-    <div class="row">
-      <div id="map-container" class="col-md-4">
-        <div clss="row">
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+        <div id="map-container" class="col-md-4">
           <h1>On the way...</h1>
           <p class="lead">Find places you can grab a bite, sip a
             drink, it's up to you.</p>
@@ -26,12 +26,12 @@
             <div class="form-group">
               <label class="sr-only" for="directions">From</label>
               <input type="text" class="form-control input-lg"
-                     id="directions-from" placeholder="From" autofocus="autofocus">
+                     id="directions-from" placeholder="From" autofocus="autofocus"/>
             </div>
             <div class="form-group">
               <label class="sr-only" for="directions">To</label>
               <input type="text" class="form-control input-lg" 
-                     id="directions-to" placeholder="To">
+                     id="directions-to" placeholder="To"/>
             </div>
             <button id="mobile-btn-go" type="button" class="btn
                                                             btn-primary
@@ -40,124 +40,52 @@
           </form>
         </div>
       </div>
-      
-      <div id="biz-container" class="col-md-4">
-        <!--
-        <div class="media">
-          <a class="pull-left">
-            <img id="event-pic" 
-                 style="width: 180px; height: auto; overflow: hidden; "
-                 src="http://www.oneworld365.org/img/101/maldives.jpg"
-                 class="media-object">
-          </a>
-          <div class="media-body">
-            <h3 class="list-group-item-heading">
-              <a id="event-title">Title</a>
-            </h3>
-            <table class="table table-condensed">
-              <tbody>
-                <tr>
-                  <td class="text-right">Categories</td>
-                  <td>Creole, Cajun</td>
-                </tr>
-                <tr>
-                  <td class="text-right">Hood</td>
-                  <td>Downtown</td>
-                </tr>
-                <tr>
-                  <td class="text-right">Rating</td>
-                  <td>4.5</td>
-                </tr>
-                <tr>
-                  <td class="text-right">Reviews</td>
-                  <td>10</td>
-                </tr>
-              </tbody>
-            </table>
+      <div class="row">
+        <div id="biz-container" class="col-md-4">
+          <!--
+          <div class="media">
+            <a class="pull-left">
+              <img id="event-pic" 
+                   style="width: 180px; height: auto; overflow: hidden; "
+                   src="http://www.oneworld365.org/img/101/maldives.jpg"
+                   class="media-object">
+            </a>
+            <div class="media-body">
+              <h3 class="list-group-item-heading">
+                <a id="event-title">Title</a>
+              </h3>
+              <table class="table table-condensed">
+                <tbody>
+                  <tr>
+                    <td class="text-right">Categories</td>
+                    <td>Creole, Cajun</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right">Hood</td>
+                    <td>Downtown</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right">Rating</td>
+                    <td>4.5</td>
+                  </tr>
+                  <tr>
+                    <td class="text-right">Reviews</td>
+                    <td>10</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
+          -->
+
         </div>
-        -->
-
       </div>
-
     </div>
-  </div>
-</div>
 
-  <!-- this polyfill provides isArray.js compatibility -->
-  <script type="text/javascript" src="js/ArrayLikeIsArray.js"></script>
-  <script type="text/javascript" src="js/leaflet.js"></script>
-  <script type="text/javascript" src="js/jquery.min.js"></script>
-  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/ArrayLikeIsArray.js"></script>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/mmodern.js"></script>
 
-  <script>
-    L.NumberedDivIcon = L.Icon.extend({
-    options: {
-    iconUrl: 'http://localhost:3000/js/images/marker-icon-2x.png',
-    number: '',
-    shadowUrl: null,
-    iconSize: new L.Point(25, 41),
-		iconAnchor: new L.Point(13, 41),
-		popupAnchor: new L.Point(0, -33),
-		/*
-		iconAnchor: (Point)
-		popupAnchor: (Point)
-		*/
-		className: 'leaflet-div-icon'
-	},
- 
-	createIcon: function () {
-		var div = document.createElement('div');
-		var img = this._createImg(this.options['iconUrl']);
-		var numdiv = document.createElement('div');
-		numdiv.setAttribute ( "class", "number" );
-		numdiv.innerHTML = this.options['number'] || '';
-		div.appendChild ( img );
-		div.appendChild ( numdiv );
-		this._setIconStyles(div, 'icon');
-		return div;
-	},
- 
-	createShadow: function () {
-		return null;
-	}
-    });
-
-    L.NumberedDivIconActive = L.Icon.extend({
-    options: {
-    iconUrl: 'http://localhost:3000/js/images/marker-icon-red.png',
-    number: '',
-    shadowUrl: null,
-    iconSize: new L.Point(25, 41),
-		iconAnchor: new L.Point(13, 41),
-		popupAnchor: new L.Point(0, -33),
-		/*
-		iconAnchor: (Point)
-		popupAnchor: (Point)
-		*/
-		className: 'leaflet-div-icon'
-	},
- 
-	createIcon: function () {
-		var div = document.createElement('div');
-		var img = this._createImg(this.options['iconUrl']);
-		var numdiv = document.createElement('div');
-		numdiv.setAttribute ( "class", "number" );
-		numdiv.innerHTML = this.options['number'] || '';
-		div.appendChild ( img );
-		div.appendChild ( numdiv );
-		this._setIconStyles(div, 'icon');
-		return div;
-	},
- 
-	createShadow: function () {
-		return null;
-	}
-    });
-
-  </script>
-
-  <script type="text/javascript" src="js/mmodern.js"></script>
-
-</body>
+  </body>
 </html>
