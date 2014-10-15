@@ -203,9 +203,7 @@
    (.parse js/JSON s)
    :keywordize-keys true))
 
-(defn direction-steps [m to from]
-  "Returns steps in the format
-  [{:start-lat :start-lng :end-lat :end-lng}, ...]"
+(defn fetch-google-lat-lngs [to from]
   (go
    (let [url (directions-uri to from)
          response (<! (http/get url))
@@ -221,10 +219,48 @@
                         :start-lng start-lng
                         :end-lat end-lat
                         :end-lng end-lng}))
-                   steps)
+                   steps)]
+     lat-lngs)))
+
+(defn mapquest-uri [to from]
+  (let [query-params {
+                      "key" "Fmjtd|luurnuurn0,bl=o5-9wr5lf"
+                      "to" to
+                      "from" from
+                      "routeType" "fastest"
+                      "narrativeType" "none"
+                      "shapeFormat" "raw"
+                      "generalize" "0"}
+        uri "http://www.mapquestapi.com/directions/v2/route"]
+    (mk-uri uri query-params)))
+
+(defn fetch-mapquest-lat-lngs [to from]
+  (go
+   (let [url (mapquest-uri to from)
+         response (<! (http/get url))
+         steps (-> response
+                   :body :route :shape :shapePoints)
+         lat-lngs (map
+                   (fn [[start-lat start-lng end-lat end-lng]]
+                     {:start-lat start-lat
+                      :start-lng start-lng
+                      :end-lat end-lat
+                      :end-lng end-lng})
+                   (partition 4 2 steps))]
+     (prn lat-lngs)
+     (prn steps)
+     ;;(prn response)
+     (.log js/console lat-lngs)
+     (.log js/console steps)
+     lat-lngs)))
+
+(defn direction-steps [m to from]
+  "Returns steps in the format
+  [{:start-lat :start-lng :end-lat :end-lng}, ...]"
+  (go
+   (let [lat-lngs (<! (fetch-mapquest-lat-lngs to from))
          start-point (-> lat-lngs first (select-keys [:start-lat :start-lng]) vals)
          end-point (-> lat-lngs last (select-keys [:end-lat :end-lng]) vals)
-         ;;end-point [45.5219757 -122.6822918]
          last-lat-lng (last lat-lngs)
          lines (concat
                 (map
