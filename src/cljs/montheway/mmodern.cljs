@@ -29,20 +29,33 @@
     (.-formatted_address node)
     (str my-lat "," my-lng)))
 
+(defn from-query-current-location? []
+  (empty? (.-value (dom/getElement "directions-from"))))
+
 (defn to-query []
   (-> autocompleteTo .getPlace .-formatted_address))
 
 (defn section-id [num]
   (str "biz-" num))
 
-(defn google-maps-url [start way-point destination]
+(defn google-maps-url [start destination]
   (let [[start-lat start-lng] start
-        [way-lat way-lng] way-point
         [dest-lat dest-lng] destination]
-    (str "https://www.google.com/maps/dir/"
-         start-lat "," start-lng "/"
-         way-lat "," way-lng "/"
-         dest-lat "," dest-lng "/")))
+    (str "comgooglemaps://?saddr="
+         start-lat "," start-lng "&daddr="
+         dest-lat "," dest-lng)))
+
+(defn waze-maps-url [dest]
+  (let [[dest-lat dest-lng] dest]
+    (str "waze://?navigate=yes&ll=" dest-lat "," dest-lng )))
+
+(defn waze-maps-url-template [dest-text dest]
+  (if (from-query-current-location?)
+    [:p
+     [:small
+      [:a
+       {:href (waze-maps-url dest )}
+       (str "Waze directions to " dest-text)]]]))
 
 (deftemplate biz-template [start-point end-point businesses]
   (for [biz businesses]
@@ -76,20 +89,33 @@
           [:tr
            [:td {:class "text-right"}
             "Reviews"]
-           [:td (:review_count biz)]]
-          [:tr
-           [:td {:class "text-right"}]
-           [:td
-            [:small
-             [:a
-              {:href (google-maps-url start-point
-                                      (-> biz
-                                          :location
-                                          :coordinate
-                                          (select-keys [:latitude :longitude])
-                                          vals)
-                                      end-point)}
-              "Directions"]]]]]]]]]]))
+           [:td (:review_count biz)]]]]
+         [:p
+          [:small
+           [:a
+            {:href (google-maps-url start-point
+                                    (-> biz
+                                        :location
+                                        :coordinate
+                                        (select-keys [:latitude :longitude])
+                                        vals))}
+            "Google directions to way-point"]]]
+        [:p
+          [:small
+           [:a
+            {:href (google-maps-url (-> biz
+                                        :location
+                                        :coordinate
+                                        (select-keys [:latitude :longitude])
+                                        vals)
+                                    end-point)}
+            "Google directions to destination"]]]
+        (waze-maps-url-template "way-point" (-> biz
+                                                 :location
+                                                 :coordinate
+                                                 (select-keys [:latitude :longitude])
+                                                 vals))
+        (waze-maps-url-template "destination" end-point)]]]]))
 
 ;; Allows handling Nodelist like a seq
 (extend-type js/NodeList
