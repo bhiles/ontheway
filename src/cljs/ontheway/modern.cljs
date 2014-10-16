@@ -324,12 +324,14 @@
        (.fitBounds m
                    [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
                     [(:ne-lat map-bounds) (:ne-lng map-bounds)]])
-
+       (.stopAll js/Ladda) ;; stop loading spinner
        ))))
 
 (let [clicks (listen (dom/getElement "btn-go") "click")]
   (go (while true
         (<! clicks) ;; wait for a click
+        (.start (.create js/Ladda ;; starts loading spinner
+                         (dom/getElement "btn-go")))
         ;; clear existing map's directions
         (remove-explanation-text) ;; clear text (if not already cleared)
         (direction-steps mappy (from-query) (to-query)) ;; draw map's directions

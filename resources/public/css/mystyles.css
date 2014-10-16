@@ -6,8 +6,7 @@ td {
    padding-right: 0 !important;
 }
 
-.text-right
-{
+.text-right {
     text-align: right !important;
 }
 
@@ -16,8 +15,7 @@ td {
     border: none !important;
 }
  
-.leaflet-marker-icon .number 
-{
+.leaflet-marker-icon .number {
     background-color: #FFFFFF;
     border-radius: 5px 5px 5px 5px;
     position: relative;
@@ -28,7 +26,6 @@ td {
     text-align: center;
 }
 
-.leaflet-marker-icon img
-{
+.leaflet-marker-icon img {
     width: 25px;
 }

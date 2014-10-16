@@ -11,9 +11,11 @@
   
     <link rel="stylesheet" href="css/mystyles.css"/>
     <link rel="stylesheet" href="css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="css/leaflet.css" />
+    <link rel="stylesheet" href="css/ladda-themeless.min.css">
 
     <script type="text/javascript" src="js/google-autocomplete.js"></script>
+    <script type="text/javascript" src="js/spin.min.js"></script>
+    <script type="text/javascript" src="js/ladda.min.js"></script>
   
   </head>
 
@@ -36,10 +38,11 @@
               <input type="text" class="form-control input-lg" 
                      id="directions-to" placeholder="To"/>
             </div>
-            <button id="mobile-btn-go" type="button" class="btn
-                                                            btn-primary
-                                                            btn-lg">
-              Go!</button>
+            <button id="mobile-btn-go" type="button" 
+                    class="btn btn-primary btn-lg ladda-button"
+                    data-style="expand-right" data-size="l">
+              <span class="ladda-label">Go!</span>
+            </button>
           </form>
         </div>
       </div>

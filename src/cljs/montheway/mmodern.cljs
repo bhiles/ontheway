@@ -266,10 +266,14 @@
                              relevant-biz
                              (iterate inc 1))]
        (dommy/append! (sel1 :#biz-container)
-                      (biz-template start-point end-point numbered-biz))))))
+                      (biz-template start-point end-point numbered-biz))
+       (.stopAll js/Ladda) ;; stop loading spinner
+       ))))
 
 (let [clicks (listen (dom/getElement "mobile-btn-go") "click")]
   (go (while true
         (<! clicks) ;; wait for a click
+        (.start (.create js/Ladda ;; starts loading spinner
+                         (dom/getElement "mobile-btn-go")))
         (direction-steps nil (from-query) (to-query)) ;; draw map's directions
         )))
