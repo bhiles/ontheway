@@ -1,6 +1,6 @@
 (ns ontheway.core
   (:use [compojure.core]
-        [ring.util.response :only [header response]]
+        [ring.util.response :only [header response file-response]]
         [clojure.string :only [join]]
         [clojure.walk :only [keywordize-keys]])
   (:require [clojure.data.json :as json]
@@ -137,7 +137,7 @@
           (header "x-proxied-by" "On the way")))))
 
 (defroutes app-routes
-  (GET "/" [] "<p>Hello from compojure</p>")
+  (GET "/" [] (file-response "index.html" {:root "resources/public"}))
   (GET "/yelp" [] (json/write-str (yelp/fetch-businesses)))
   (GET "/yelp-bounds" {params :params}
        (json-response
