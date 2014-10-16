@@ -50,7 +50,8 @@
        [:div
         {:class "media-body"}
         [:h4
-         [:a {:href (:url biz)}
+         [:a {:href (str "yelp:///biz/"
+                         (last (clojure.string/split (:url biz) #"/")))}
           (str (:id biz) ". " (:name biz))]]
         [:table {:class "table table-condensed"}
          [:tbody
