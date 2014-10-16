@@ -19,6 +19,8 @@
                        (dom/getElement "directions-from")))
 (def autocompleteTo (google.maps.places.Autocomplete.
                        (dom/getElement "directions-to")))
+(def my-lat)
+(def my-lng)
 
 (defn listen [el type]
   (let [out (chan)]
@@ -27,7 +29,9 @@
     out))
    
 (defn from-query []
-  (-> autocompleteFrom .getPlace .-formatted_address))
+  (if-let [node (.getPlace autocompleteFrom)]
+    (.-formatted_address node)
+    (str my-lat "," my-lng)))
 
 (defn to-query []
   (-> autocompleteTo .getPlace .-formatted_address))
@@ -262,8 +266,8 @@
   [{:start-lat :start-lng :end-lat :end-lng}, ...]"
   (go
    (let [lat-lngs (<! (fetch-mapquest-lat-lngs to from))
-         start-point (-> lat-lngs first (select-keys [:start-lat :start-lng]) vals)
-         end-point (-> lat-lngs last (select-keys [:end-lat :end-lng]) vals)
+         end-point (-> lat-lngs first (select-keys [:start-lat :start-lng]) vals)
+         start-point (-> lat-lngs last (select-keys [:end-lat :end-lng]) vals)
          last-lat-lng (last lat-lngs)
          lines (concat
                 (map
@@ -334,6 +338,8 @@
 (defn geolocation [position]
   (let [lng (.-longitude js/position.coords)
         lat (.-latitude js/position.coords)]
+    (def my-lat lat)
+    (def my-lng lng)
     (setup-map mappy lat lng)))
 
 ;; Main method

@@ -8,6 +8,11 @@
             [dommy.core :as dommy]
             [ontheway.config :as config]))
 
+(.getCurrentPosition js/navigator.geolocation
+                     (fn [position]
+                       (def my-lat (.-latitude js/position.coords))
+                       (def my-lng (.-longitude js/position.coords))))
+
 (defn listen [el type]
   (let [out (chan)]
     (events/listen el type
@@ -20,7 +25,9 @@
                        (dom/getElement "directions-to")))
 
 (defn from-query []
-  (-> autocompleteFrom .getPlace .-formatted_address))
+  (if-let [node (.getPlace autocompleteFrom)]
+    (.-formatted_address node)
+    (str my-lat "," my-lng)))
 
 (defn to-query []
   (-> autocompleteTo .getPlace .-formatted_address))
