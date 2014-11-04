@@ -141,7 +141,7 @@
   (GET "/yelp" [] (json/write-str (yelp/fetch-businesses)))
   (GET "/yelp-bounds" {params :params}
        (json-response
-        (yelp/fetch-businesses-bounds (:bounds params))))
+        (yelp/fetch-businesses-bounds (:bounds params) (:term params))))
   (GET "/proxy" [:as req] (proxy-request req))
   (route/resources "/")
   (route/not-found "Page not found")

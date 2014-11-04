@@ -22,7 +22,10 @@
 (def autocompleteFrom (google.maps.places.Autocomplete.
                        (dom/getElement "directions-from")))
 (def autocompleteTo (google.maps.places.Autocomplete.
-                       (dom/getElement "directions-to")))
+                     (dom/getElement "directions-to")))
+;; set the more options collapser to not toggle
+(.collapse (js/$ ".collapse") {:toggle false})
+
 (def my-lat)
 (def my-lng)
 
@@ -50,8 +53,17 @@
     (.-formatted_address node)
     (.-value (dom/getElement "directions-to"))))
 
-(defn remove-explanation-text []
-  (if-let [node (dom/getElement "explanation")]
+(defn category-query []
+  (let [category (.-value (dom/getElement "directions-category"))]
+    (if (empty-string? category)
+      "food"
+      category)))
+
+(defn transportation-query []
+  (.-value (dom/getElement "directions-transportation")))
+
+(defn remove-node [id]
+  (if-let [node (dom/getElement id)]
     (.remove node)))
 
 (defn section-id [num]
@@ -112,6 +124,10 @@
                                       end-point)}
               "Directions"]]]]]]]]]]))
 
+(deftemplate no-biz-template []
+  [:div {:id "no-biz-text" :class "row"}
+   [:h3 "No businesses found"]])
+
 (defn expand-biz-sidebar []
   (.setAttribute (dom/getElement "map-container")
                  "class" "col-md-8 no-right-padding")
@@ -126,6 +142,9 @@
 (defn clear-biz-sidebar []
   (let [sidebar (dom/getElement "biz-container")]
     (dom/removeChildren sidebar)))
+
+(defn hide-more-options []
+  (.collapse (js/$ ".collapse") "hide"))
 
 (defn setup-map [m lat lng]
   (-> m (.setView [lat lng] 12))
@@ -260,21 +279,27 @@
                    steps)]
      lat-lngs)))
 
-(defn mapquest-uri [to from]
+(defn mapquest-route-type [option]
+  (case option
+    "driving" "fastest"
+    "walking" "pedestrian"
+    "biking" "bicycle"))
+
+(defn mapquest-uri [to from transport-type]
   (let [query-params {
                       "key" "Fmjtd|luurnuurn0,bl=o5-9wr5lf"
                       "to" to
                       "from" from
-                      "routeType" "fastest"
+                      "routeType" (mapquest-route-type transport-type)
                       "narrativeType" "none"
                       "shapeFormat" "raw"
                       "generalize" "0"}
         uri "http://www.mapquestapi.com/directions/v2/route"]
     (mk-uri uri query-params)))
 
-(defn fetch-mapquest-lat-lngs [to from]
+(defn fetch-mapquest-lat-lngs [to from transport-type]
   (go
-   (let [url (proxy-url (mapquest-uri to from))
+   (let [url (proxy-url (mapquest-uri to from transport-type))
          response (<! (http/get url))
          steps (-> response
                    :body :route :shape :shapePoints)
@@ -287,11 +312,20 @@
                    (partition 4 2 steps))]
      lat-lngs)))
 
-(defn direction-steps [m to from]
+(defn yelp-uri [map-bounds term]
+  (let [query-params {"bounds" (str (:sw-lat map-bounds) ","
+                                    (:sw-lng map-bounds) "|"
+                                    (:ne-lat map-bounds) ","
+                                    (:ne-lng map-bounds))
+                      "term" term}
+        uri (str config/hostname "/yelp-bounds")]
+    (mk-uri uri query-params)))
+
+(defn direction-steps [m to from transport-type category]
   "Returns steps in the format
   [{:start-lat :start-lng :end-lat :end-lng}, ...]"
   (go
-   (let [lat-lngs (<! (fetch-mapquest-lat-lngs to from))
+   (let [lat-lngs (<! (fetch-mapquest-lat-lngs to from transport-type))
          end-point (-> lat-lngs first (select-keys [:start-lat :start-lng]) vals)
          start-point (-> lat-lngs last (select-keys [:end-lat :end-lng]) vals)
          last-lat-lng (last lat-lngs)
@@ -313,10 +347,7 @@
                  [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
                   [(:ne-lat map-bounds) (:ne-lng map-bounds)]])
      ;; Fetch and draw Yelp data
-     (let [yelp-response (<! (http/get
-                              (str config/hostname "/yelp-bounds?bounds="
-                                   (:sw-lat map-bounds) "," (:sw-lng map-bounds) "|"
-                                   (:ne-lat map-bounds) "," (:ne-lng map-bounds))))
+     (let [yelp-response (<! (http/get (yelp-uri map-bounds category)))
            businesses (-> yelp-response :body)
            relevant-biz (->> businesses
                              (find-businesses-on-the-way lat-lngs)
@@ -324,32 +355,37 @@
            numbered-biz (map #(assoc %1 :id %2)
                              relevant-biz
                              (iterate inc 1))]
-       (doseq [biz numbered-biz]
-         (let [{:keys [id name url]} biz
-               {:keys [latitude longitude]} (-> biz :location :coordinate)]
-           (add-numbered-marker biz-layer latitude longitude id)))
-       (.addTo biz-layer m)
-       (dommy/append! (sel1 :#biz-container)
-                      (biz-template start-point end-point numbered-biz))
-       (doseq [biz numbered-biz]
-         (let [{:keys [id name url]} biz
-               {:keys [latitude longitude]} (-> biz :location :coordinate)
-               mouseover (listen (dom/getElement (section-id (:id biz))) "mouseover")
-               mouseout (listen (dom/getElement (section-id (:id biz))) "mouseout")]
-           (go
-            (while true
-              (<! mouseover)
-              (remove-marker biz-layer id)
-              (add-numbered-marker-active biz-layer latitude longitude id)))
-           (go
-            (while true
-              (<! mouseout)
-              (remove-marker biz-layer id)
-              (add-numbered-marker biz-layer latitude longitude id)))))
-       (expand-biz-sidebar) ;; reduce map size to allow for biz sidebar
-       (.fitBounds m
-                   [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
-                    [(:ne-lat map-bounds) (:ne-lng map-bounds)]])
+       (if (empty? numbered-biz)
+         (dommy/append! (sel1 :#map-text-container) (no-biz-template))
+         (do
+           (doseq [biz numbered-biz]
+             (let [{:keys [id name url]} biz
+                   {:keys [latitude longitude]} (-> biz :location :coordinate)]
+               (add-numbered-marker biz-layer latitude longitude id)))
+           (.addTo biz-layer m)
+           (dommy/append! (sel1 :#biz-container)
+                          (biz-template start-point end-point numbered-biz))
+           (doseq [biz numbered-biz]
+             (let [{:keys [id name url]} biz
+                   {:keys [latitude longitude]} (-> biz :location :coordinate)
+                   mouseover (listen (dom/getElement
+                                      (section-id (:id biz))) "mouseover")
+                   mouseout (listen (dom/getElement
+                                     (section-id (:id biz))) "mouseout")]
+               (go
+                (while true
+                  (<! mouseover)
+                  (remove-marker biz-layer id)
+                  (add-numbered-marker-active biz-layer latitude longitude id)))
+               (go
+                (while true
+                  (<! mouseout)
+                  (remove-marker biz-layer id)
+                  (add-numbered-marker biz-layer latitude longitude id)))))
+           (expand-biz-sidebar)) ;; reduce map size to allow for biz sidebar
+         (.fitBounds m
+                     [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
+                      [(:ne-lat map-bounds) (:ne-lng map-bounds)]]))
        (.stopAll js/Ladda) ;; stop loading spinner
        ))))
 
@@ -365,11 +401,16 @@
         ;; clear the sidebar
         (hide-biz-sidebar)
         (clear-biz-sidebar)
+        ;; hide the more options expander
+        (hide-more-options)
+        ;; remove no businesses found text (if even there)
+        (remove-node "no-biz-text")
         ;; clear text (if not already cleared)
-        (remove-explanation-text)
+        (remove-node "explanation")
         ;; draw map's directions and businesses
-        (direction-steps mappy (from-query) (to-query)) 
-        )))
+        (direction-steps mappy
+                         (from-query) (to-query)
+                         (transportation-query) (category-query)))))
 
 (defn geolocation [position]
   (let [lng (.-longitude js/position.coords)

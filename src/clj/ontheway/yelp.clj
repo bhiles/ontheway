@@ -37,18 +37,18 @@
         coll
         (recur (+ offset 20) (concat coll businesses))))))
 
-(defn yelp-api-bounds [bounds offset]
+(defn yelp-api-bounds [bounds term offset]
   (yelp-client/business-search yelp-conn
                                {"offset" offset
                                 "bounds" bounds
-                                "term" "food"
+                                "term" term
                                 "sort" "0"}))
 
-(defn fetch-businesses-bounds [bounds]
+(defn fetch-businesses-bounds [bounds term]
   (let [max-count 100]
     (loop [offset 0
            coll []]
-      (let [response (yelp-api-bounds bounds offset)
+      (let [response (yelp-api-bounds bounds term offset)
             businesses (:businesses response)]
         (if (or (empty? businesses) (>= (count coll) max-count))
           coll
