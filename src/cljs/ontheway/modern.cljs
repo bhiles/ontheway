@@ -1,4 +1,5 @@
 (ns ontheway.modern
+  (:use [clojure.string :only [trim join]])
   (:use-macros [dommy.macros :only [deftemplate sel1 sel]])
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs-http.client :as http]
@@ -27,14 +28,24 @@
     (events/listen el type
       (fn [e] (put! out e)))
     out))
-   
+
+(defn empty-string? [s]
+  (-> s
+      trim
+      empty?))
+
 (defn from-query []
   (if-let [node (.getPlace autocompleteFrom)]
     (.-formatted_address node)
-    (str my-lat "," my-lng)))
+    (let [form-val (.-value (dom/getElement "directions-from"))]
+      (if (empty-string? form-val)
+        (str my-lat "," my-lng)
+        form-val))))
 
 (defn to-query []
-  (-> autocompleteTo .getPlace .-formatted_address))
+  (if-let [node (.getPlace autocompleteTo)]
+    (.-formatted_address node)
+    (.-value (dom/getElement "directions-to"))))
 
 (defn remove-explanation-text []
   (.remove (dom/getElement "explanation")))
@@ -150,7 +161,7 @@
 
 (defn mk-uri [base-uri query-params]
   (str base-uri "?"
-       (clojure.string/join "&"
+       (join "&"
              (map (fn [[k v]] (str k "=" (url-encode v))) query-params))))
 
 (defn proxy-url [url]
