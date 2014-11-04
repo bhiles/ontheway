@@ -16,6 +16,9 @@
 ;; (def tile-url "https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png")
 (def tile-url "http://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}")
 (def mappy (-> L (.map "mappy")))
+(def directions-layer (-> L (.layerGroup [])))
+(def biz-layer (-> L (.layerGroup [])))
+(def biz-layer-items (atom {}))
 (def autocompleteFrom (google.maps.places.Autocomplete.
                        (dom/getElement "directions-from")))
 (def autocompleteTo (google.maps.places.Autocomplete.
@@ -48,7 +51,8 @@
     (.-value (dom/getElement "directions-to"))))
 
 (defn remove-explanation-text []
-  (.remove (dom/getElement "explanation")))
+  (if-let [node (dom/getElement "explanation")]
+    (.remove node)))
 
 (defn section-id [num]
   (str "biz-" num))
@@ -114,6 +118,14 @@
   (.setAttribute (dom/getElement "biz-container")
                  "class" "col-md-4"))
 
+(defn hide-biz-sidebar []
+  (.setAttribute (dom/getElement "map-container")
+                 "class" "col-md-12")
+  (.setAttribute (dom/getElement "biz-container")
+                 "class" ""))
+(defn clear-biz-sidebar []
+  (let [sidebar (dom/getElement "biz-container")]
+    (dom/removeChildren sidebar)))
 
 (defn setup-map [m lat lng]
   (-> m (.setView [lat lng] 12))
@@ -122,19 +134,23 @@
                               :id "examples.map-i875mjb7"})
       (.addTo m)))
 
-(defn add-numbered-marker [lat lng num]
-  (let [NumberedDivIcon (.-NumberedDivIcon js/L)]
-    (-> L (.marker [lat, lng]
-                   {:icon (NumberedDivIcon. {:number (str num)})})
-        (.on "click" #(aset js/window "location" (str "#" (section-id num))))
-        (.addTo mappy))))
+(defn add-numbered-marker [layer lat lng num]
+  (let [NumberedDivIcon (.-NumberedDivIcon js/L)
+        marker (-> L (.marker [lat, lng]
+                              {:icon (NumberedDivIcon. {:number (str num)})})
+                   (.on "click" #(aset js/window "location"
+                                       (str "#" (section-id num)))))
+        new-layer (.addLayer layer marker)]
+    (swap! biz-layer-items assoc num new-layer)))
 
-(defn add-numbered-marker-active [lat lng num]
-  (let [NumberedDivIconActive (.-NumberedDivIconActive js/L)]
-    (-> L (.marker [lat, lng]
-                   {:icon (NumberedDivIconActive. {:number (str num)})})
-        (.on "click" #(aset js/window "location" (str "#" (section-id num))))
-        (.addTo mappy))))
+(defn add-numbered-marker-active [layer lat lng num]
+  (let [NumberedDivIconActive (.-NumberedDivIconActive js/L)
+        marker (-> L (.marker [lat, lng]
+                              {:icon (NumberedDivIconActive. {:number (str num)})})
+                   (.on "click" #(aset js/window "location"
+                                       (str "#" (section-id num)))))
+        new-layer (.addLayer layer marker)]
+    (swap! biz-layer-items assoc num new-layer)))
 
 ;; Allows handling Nodelist like a seq
 (extend-type js/NodeList
@@ -150,11 +166,10 @@
 (defn find-marker-2 []
   (dom/getElementsByClass "number"))
 
-(defn remove-marker [num]
-  (if-let [element (first
-                    (filter #(= (str num) (.-innerText %))
-                            (dom/getElementsByClass "number")))]
-    (-> element .-parentNode .remove)))
+(defn remove-marker [layer num]
+  (let [marker (get @biz-layer-items num)]
+    (swap! biz-layer-items dissoc num)
+    (.removeLayer layer marker)))
 
 (defn url-encode [s]
   (js/encodeURIComponent s))
@@ -286,15 +301,14 @@
                    [start-lat start-lng])
                  lat-lngs)
                 [[(:end-lat last-lat-lng) (:end-lng last-lat-lng)]])
-         map-bounds (max-box-corners lat-lngs)]
-     ;; draw start/end points
-     (-> L (.circle (vec start-point) 8 {:color "green"})
-         (.addTo m))
-     (-> L (.circle (vec end-point) 8 {:color "red"})
-         (.addTo m))
-     ;; draw map directions
-     (-> L (.polyline lines)
-         (.addTo m)) 
+         map-bounds (max-box-corners lat-lngs)
+         start-circle (-> L (.circle (vec start-point) 8 {:color "green"}))
+         end-circle (-> L (.circle (vec end-point) 8 {:color "red"}))
+         lines (-> L (.polyline lines))]
+     ;; draw directions
+     (doseq [l [start-circle end-circle lines]]
+       (.addLayer directions-layer l))
+     (.addTo directions-layer m)
      (.fitBounds m
                  [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
                   [(:ne-lat map-bounds) (:ne-lng map-bounds)]])
@@ -313,7 +327,8 @@
        (doseq [biz numbered-biz]
          (let [{:keys [id name url]} biz
                {:keys [latitude longitude]} (-> biz :location :coordinate)]
-           (add-numbered-marker latitude longitude id)))
+           (add-numbered-marker biz-layer latitude longitude id)))
+       (.addTo biz-layer m)
        (dommy/append! (sel1 :#biz-container)
                       (biz-template start-point end-point numbered-biz))
        (doseq [biz numbered-biz]
@@ -324,13 +339,13 @@
            (go
             (while true
               (<! mouseover)
-              (remove-marker id)
-              (add-numbered-marker-active latitude longitude id)))
+              (remove-marker biz-layer id)
+              (add-numbered-marker-active biz-layer latitude longitude id)))
            (go
             (while true
               (<! mouseout)
-              (remove-marker id)
-              (add-numbered-marker latitude longitude id)))))
+              (remove-marker biz-layer id)
+              (add-numbered-marker biz-layer latitude longitude id)))))
        (expand-biz-sidebar) ;; reduce map size to allow for biz sidebar
        (.fitBounds m
                    [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
@@ -344,8 +359,16 @@
         (.start (.create js/Ladda ;; starts loading spinner
                          (dom/getElement "btn-go")))
         ;; clear existing map's directions
-        (remove-explanation-text) ;; clear text (if not already cleared)
-        (direction-steps mappy (from-query) (to-query)) ;; draw map's directions
+        (.clearLayers directions-layer)
+        ;; clear existing business markers
+        (.clearLayers biz-layer)
+        ;; clear the sidebar
+        (hide-biz-sidebar)
+        (clear-biz-sidebar)
+        ;; clear text (if not already cleared)
+        (remove-explanation-text)
+        ;; draw map's directions and businesses
+        (direction-steps mappy (from-query) (to-query)) 
         )))
 
 (defn geolocation [position]
