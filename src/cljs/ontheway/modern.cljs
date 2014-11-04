@@ -149,7 +149,6 @@
 (defn setup-map [m lat lng]
   (-> m (.setView [lat lng] 12))
   (-> L (.tileLayer tile-url {:maxZoom 16 ;; this is the limitation of the tile
-                              :attribution "from me!"
                               :id "examples.map-i875mjb7"})
       (.addTo m)))
 
