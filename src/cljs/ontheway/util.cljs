@@ -40,3 +40,11 @@
   (js->clj
    (.parse js/JSON s)
    :keywordize-keys true))
+
+;; GEO helpers
+
+(defn get-position []
+  (let [out (chan)
+        geo (.-geolocation js/navigator)]
+    (.getCurrentPosition geo (fn [pos] (put! out pos)))
+    out))

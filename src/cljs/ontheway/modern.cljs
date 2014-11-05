@@ -15,6 +15,7 @@
             [ontheway.mapquest :as mapquest]
             [ontheway.yelp :as yelp]))
 
+;; Bootstrap to setup leaflet/clojurescript lib, blade
 (blade/bootstrap)
 
 ;; Declare constants
@@ -43,12 +44,12 @@
 
 ;; Form fields
 
-(defn from-query []
+(defn from-query [lat lng]
   (if-let [node (.getPlace autocompleteFrom)]
     (.-formatted_address node)
     (let [form-val (.-value (dom/getElement "directions-from"))]
       (if (u/empty-string? form-val)
-        (str my-lat "," my-lng)
+        (str lat "," lng)
         form-val))))
 
 (defn to-query []
@@ -251,43 +252,43 @@
 
 ;; Full page rendering after button submit
 
-(let [clicks (u/listen (dom/getElement "btn-go") "click")]
-  (go (while true
-        ;; wait for a click
-        (<! clicks)
-        ; start loading spinner
-        (start-spinner)
-        ;; clear existing map's directions
-        (.clearLayers directions-layer)
-        ;; clear existing business markers
-        (.clearLayers biz-layer)
-        ;; clear the sidebar
-        (hide-biz-sidebar)
-        (clear-biz-sidebar)
-        ;; hide the more options expander
-        (hide-more-options)
-        ;; remove no businesses found text (if even there)
-        (u/remove-node "no-biz-text")
-        ;; clear text (if not already cleared)
-        (u/remove-node "explanation")
-        ;; form params, directions, and yelp info
-        (let [to (to-query)
-              from (from-query)
-              transport-type (transportation-query)
-              category (category-query)
-              directions (<! (fetch-draw-directions mappy to from
-                                                    transport-type category))]
-          (<! (draw-yelp-info mappy directions category))
-          ;; stop loading spinner
-          (stop-spinner)
-          ))))
-
-(defn geolocation [position]
-  (let [lng (.-longitude js/position.coords)
-        lat (.-latitude js/position.coords)]
-    (def my-lat lat)
-    (def my-lng lng)
-    (setup-map mappy lat lng)))
+(defn setup-button-click [lat lng]
+  (let [clicks (u/listen (dom/getElement "btn-go") "click")]
+    (go (while true
+          ;; wait for a click
+          (<! clicks)
+                                        ; start loading spinner
+          (start-spinner)
+          ;; clear existing map's directions
+          (.clearLayers directions-layer)
+          ;; clear existing business markers
+          (.clearLayers biz-layer)
+          ;; clear the sidebar
+          (hide-biz-sidebar)
+          (clear-biz-sidebar)
+          ;; hide the more options expander
+          (hide-more-options)
+          ;; remove no businesses found text (if even there)
+          (u/remove-node "no-biz-text")
+          ;; clear text (if not already cleared)
+          (u/remove-node "explanation")
+          ;; form params, directions, and yelp info
+          (let [to (to-query)
+                from (from-query lat lng)
+                transport-type (transportation-query)
+                category (category-query)
+                directions (<! (fetch-draw-directions mappy to from
+                                                      transport-type category))]
+            (<! (draw-yelp-info mappy directions category))
+            ;; stop loading spinner
+            (stop-spinner)
+            )))))
 
 ;; Main method
-(.getCurrentPosition js/navigator.geolocation geolocation)
+
+(go 
+ (let [coords    (.-coords (<! (u/get-position)))
+       latitude  (.-latitude coords)
+       longitude (.-longitude coords)]
+   (setup-map mappy latitude longitude)
+   (setup-button-click latitude longitude)))
