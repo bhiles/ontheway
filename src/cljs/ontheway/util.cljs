@@ -48,3 +48,36 @@
         geo (.-geolocation js/navigator)]
     (.getCurrentPosition geo (fn [pos] (put! out pos)))
     out))
+
+(def pi (.-PI js/Math))
+
+(defn sin [num]
+  (.sin js/Math num))
+
+(defn cos [num]
+  (.cos js/Math num))
+
+(defn asin [num]
+  (.asin js/Math num))
+
+(defn sqrt [num]
+  (.sqrt js/Math num))
+
+(defn to-radians [num]
+  (/ (* pi num) 180))
+
+(defn distance-between
+  "The distance between the two points (in miles) using the Haversine formula."
+  [[lat1 lng1] [lat2 lng2]]
+  (let [R 3963.1676 ; earth's radius (in miles)
+        dlat (to-radians (- lat2 lat1))
+        dlng (to-radians (- lng2 lng1))
+        lat1 (to-radians lat1)
+        lat2 (to-radians lat2)
+        a (+ (* (sin (/ dlat 2))
+                (sin (/ dlat 2)))
+             (* (sin (/ dlng 2))
+                (sin (/ dlng 2))
+                (cos lat1)
+                (cos lat2)))]
+    (* R 2 (asin (sqrt a)))))

@@ -43,6 +43,15 @@
     (.-formatted_address node)
     (.-value (dom/getElement "directions-to"))))
 
+(defn category-query []
+  (let [category (.-value (dom/getElement "directions-category"))]
+    (if (u/empty-string? category)
+      "food"
+      category)))
+
+(defn transportation-query []
+  (.-value (dom/getElement "directions-transportation")))
+
 (defn start-spinner []
   (->> "mobile-btn-go"
        dom/getElement
@@ -67,74 +76,87 @@
 
 (deftemplate biz-template [start-point end-point businesses]
   (for [biz businesses]
-    [:div {:class "row"}
-     [:section {:id (section-id (:id biz))}
-      [:div {:class "media"}
-       [:a {:class "pull-left"}
-        [:img
-         {:class "media-object"
-          :style "width: 180px; height: auto; overflow: hidden;"
-          :src (:image_url biz)}]]
-       [:div
-        {:class "media-body"}
-        [:h4
-         [:a {:href (str "yelp:///biz/"
-                         (last (split (:url biz) #"/")))}
-          (str (:id biz) ". " (:name biz))]]
-        [:table {:class "table table-condensed"}
-         [:tbody
-          [:tr
-           [:td {:class "text-right"}
-            "Categories"]
-           [:td (->> (:categories biz)
-                     (mapcat
+    (let [id (section-id (:id biz))
+          yelp-url (str "yelp:///biz/" (last (split (:url biz) #"/")))
+          categories (mapcat
                       (fn [c]
-                        [(first c) [:br]])))]]
-          [:tr
-           [:td {:class "text-right"}
-            "Rating"]
-           [:td (:rating biz)]]
-          [:tr
-           [:td {:class "text-right"}
-            "Reviews"]
-           [:td (:review_count biz)]]]]
-         [:p
-          [:small
-           [:a
-            {:href (google/mobile-maps-url start-point
-                                    (-> biz
-                                        :location
-                                        :coordinate
-                                        (select-keys [:latitude :longitude])
-                                        vals))}
-            "Google directions to way-point"]]]
-        [:p
-          [:small
-           [:a
-            {:href (google/mobile-maps-url (-> biz
-                                               :location
-                                               :coordinate
-                                               (select-keys [:latitude :longitude])
-                                               vals)
-                                           end-point)}
-            "Google directions to destination"]]]
-        (waze-maps-url-template "way-point" (-> biz
-                                                :location
-                                                :coordinate
-                                                (select-keys [:latitude :longitude])
-                                                vals))
-        (waze-maps-url-template "destination" end-point)]]]]))
+                        [(first c) [:br]])
+                      (:categories biz))
+          [lat lng] (-> biz :location :coordinate
+                                          (select-keys [:latitude :longitude])
+                                          vals)
+          waypoint [lat lng]
+          distance (u/distance-between start-point waypoint)
+          rounded-distance (.toFixed distance 2)
+          gmaps-url-to-waypoint (google/mobile-maps-url start-point waypoint)
+          gmaps-url-to-destination (google/mobile-maps-url waypoint end-point)
+          waze-url-to-waypoint (waze-maps-url-template "way-point" waypoint)
+          waze-url-to-destination (waze-maps-url-template "destination" end-point)]
+      [:div {:class "row"}
+       [:section {:id id}
+        [:div {:class "media"}
+         [:a {:class "pull-left"}
+          [:img
+           {:class "media-object"
+            :style "width: 180px; height: auto; overflow: hidden;"
+            :src (:image_url biz)}]]
+         [:div
+          {:class "media-body"}
+          [:h4
+           [:a {:href yelp-url}
+            (str (:id biz) ". " (:name biz))]]
+          [:table {:class "table table-condensed"}
+           [:tbody
+            [:tr
+             [:td {:class "text-right"}
+              "Categories"]
+             [:td categories]]
+            [:tr
+             [:td {:class "text-right"}
+              "Rating"]
+             [:td (:rating biz)]]
+            [:tr
+             [:td {:class "text-right"}
+              "Reviews"]
+             [:td (:review_count biz)]]
+            [:tr
+             [:td {:class "text-right"}
+              "Distance"]
+             [:td (str rounded-distance " miles")]]]]
+          [:p
+           [:small
+            [:a
+             {:href gmaps-url-to-waypoint}
+             "Google directions to way-point"]]]
+          [:p
+           [:small
+            [:a
+             {:href gmaps-url-to-destination}
+             "Google directions to destination"]]]
+          waze-url-to-waypoint
+          waze-url-to-destination]]]])))
+
+(deftemplate no-biz-template []
+  [:h3 "No businesses found"])
+
+;; Collapse HTML
+
+(defn clear-biz-sidebar []
+  (let [sidebar (dom/getElement "biz-container")]
+    (dom/removeChildren sidebar)))
 
 ;; Display Yelp businesses
 
-(defn display-businesses [to from]
+(defn display-businesses [to from transport-type category]
   (go
    (let [{:keys [lat-lngs start-point end-point map-bounds] :as directions}
-             (<! (mapquest/directions to from "driving"))
+             (<! (mapquest/directions to from transport-type))
          numbered-biz (<! (yelp/find-and-rank-businesses
-                           map-bounds lat-lngs "food"))]
+                           map-bounds lat-lngs category))]
      (dommy/append! (sel1 :#biz-container)
-                    (biz-template start-point end-point numbered-biz)))))
+                    (if (empty? numbered-biz)
+                      (no-biz-template)
+                      (biz-template start-point end-point numbered-biz))))))
 
 ;; Page rendering logic after button submit
 
@@ -143,7 +165,9 @@
     (go (while true
           (<! clicks) ;; wait for a click
           (start-spinner)
-          (<! (display-businesses (from-query lat lng) (to-query)))
+          (clear-biz-sidebar)
+          (<! (display-businesses (to-query) (from-query lat lng) 
+                                  (transportation-query) (category-query)))
           (stop-spinner)))))
 
 ;; Main method

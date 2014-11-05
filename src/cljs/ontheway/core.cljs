@@ -130,6 +130,7 @@
                  "class" "col-md-12")
   (.setAttribute (dom/getElement "biz-container")
                  "class" ""))
+
 (defn clear-biz-sidebar []
   (let [sidebar (dom/getElement "biz-container")]
     (dom/removeChildren sidebar)))
@@ -268,8 +269,8 @@
           ;; clear text (if not already cleared)
           (u/remove-node "explanation")
           ;; form params, directions, and yelp info
-          (let [to (to-query)
-                from (from-query lat lng)
+          (let [from (from-query lat lng)
+                to (to-query)
                 transport-type (transportation-query)
                 category (category-query)
                 directions (<! (fetch-draw-directions map to from
