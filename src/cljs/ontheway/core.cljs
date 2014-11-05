@@ -1,4 +1,4 @@
-(ns ontheway.modern
+(ns ontheway.core
   (:use [clojure.string :only [trim join]])
   (:use-macros [dommy.macros :only [deftemplate sel1 sel]])
   (:require-macros [cljs.core.async.macros :refer [go]])

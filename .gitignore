@@ -9,5 +9,5 @@ pom.xml.asc
 /.nrepl-port
 
 # cljs compiled files
-resources/public/js/modern.js
-resources/public/js/mmodern.js
+resources/public/js/core.js
+resources/public/js/mobile-core.js

@@ -1,4 +1,4 @@
-(ns montheway.mmodern
+(ns montheway.core
   (:use-macros [dommy.macros :only [deftemplate sel1 sel]])
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs-http.client :as http]
