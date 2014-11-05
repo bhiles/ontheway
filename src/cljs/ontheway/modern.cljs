@@ -15,34 +15,26 @@
             [ontheway.mapquest :as mapquest]
             [ontheway.yelp :as yelp]))
 
-;; Bootstrap to setup leaflet/clojurescript lib, blade
+;; Setup
+
+;; bootstrap to setup leaflet/clojurescript lib, blade
 (blade/bootstrap)
-
-;; Declare constants
-
-;; (def tile-url "https://{s}.tiles.mapbox.com/v3/{id}/{z}/{x}/{y}.png")
-(def tile-url "http://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}")
-(def mappy (-> L (.map "mappy")))
-(def directions-layer (-> L (.layerGroup [])))
-(def biz-layer (-> L (.layerGroup [])))
-(def biz-layer-items (atom {}))
-(def autocompleteFrom (google.maps.places.Autocomplete.
-                       (dom/getElement "directions-from")))
-(def autocompleteTo (google.maps.places.Autocomplete.
-                     (dom/getElement "directions-to")))
-
-(def my-lat)
-(def my-lng)
 
 ;; set the more options collapser to not toggle
 (.collapse (js/$ ".collapse") {:toggle false})
 
-;; Allows handling Nodelist like a seq
+;; allows handling Nodelist like a seq
 (extend-type js/NodeList
   ISeqable
   (-seq [array] (array-seq array 0)))
 
 ;; Form fields
+
+(def autocompleteFrom (google.maps.places.Autocomplete.
+                       (dom/getElement "directions-from")))
+
+(def autocompleteTo (google.maps.places.Autocomplete.
+                     (dom/getElement "directions-to")))
 
 (defn from-query [lat lng]
   (if-let [node (.getPlace autocompleteFrom)]
@@ -152,6 +144,11 @@
 
 ;; Map configuration/alteration
 
+(def tile-url (str "http://server.arcgisonline.com"
+                   "/ArcGIS/rest/services/Canvas"
+                   "/World_Light_Gray_Base/MapServer/tile"
+                   "/{z}/{y}/{x}"))
+
 (defn setup-map [m lat lng]
   (-> m (.setView [lat lng] 12))
   (-> L (.tileLayer tile-url {:maxZoom 16 ;; this is the limitation of the tile
@@ -163,32 +160,32 @@
               [[(:sw-lat map-bounds) (:sw-lng map-bounds)]
                [(:ne-lat map-bounds) (:ne-lng map-bounds)]]))
 
-(defn add-numbered-marker [layer lat lng num]
+(defn add-numbered-marker [layer layer-items lat lng num]
   (let [NumberedDivIcon (.-NumberedDivIcon js/L)
         marker (-> L (.marker [lat, lng]
                               {:icon (NumberedDivIcon. {:number (str num)})})
                    (.on "click" #(aset js/window "location"
                                        (str "#" (section-id num)))))
         new-layer (.addLayer layer marker)]
-    (swap! biz-layer-items assoc num new-layer)))
+    (swap! layer-items assoc num new-layer)))
 
-(defn add-numbered-marker-active [layer lat lng num]
+(defn add-numbered-marker-active [layer layer-items lat lng num]
   (let [NumberedDivIconActive (.-NumberedDivIconActive js/L)
         marker (-> L (.marker [lat, lng]
                               {:icon (NumberedDivIconActive. {:number (str num)})})
                    (.on "click" #(aset js/window "location"
                                        (str "#" (section-id num)))))
         new-layer (.addLayer layer marker)]
-    (swap! biz-layer-items assoc num new-layer)))
+    (swap! layer-items assoc num new-layer)))
 
-(defn remove-marker [layer num]
-  (let [marker (get @biz-layer-items num)]
-    (swap! biz-layer-items dissoc num)
+(defn remove-marker [layer layer-items num]
+  (let [marker (get @layer-items num)]
+    (swap! layer-items dissoc num)
     (.removeLayer layer marker)))
 
 ;; Draw directions/markers
 
-(defn draw-directions [m directions]
+(defn draw-directions [m directions directions-layer]
   (let [{:keys [start-point end-point lines map-bounds]} directions
         start-circle (-> L (.circle (vec start-point) 8 {:color "green"}))
         end-circle (-> L (.circle (vec end-point) 8 {:color "red"}))
@@ -197,16 +194,16 @@
       (.addLayer directions-layer l))
     (.addTo directions-layer m)))
 
-(defn draw-yelp-markers [m numbered-biz]
+(defn draw-yelp-markers [m numbered-biz layer layer-items]
   (doseq [biz numbered-biz]
     (let [{:keys [id name url]} biz
           {:keys [latitude longitude]} (-> biz :location :coordinate)]
-      (add-numbered-marker biz-layer latitude longitude id)))
-  (.addTo biz-layer m))
+      (add-numbered-marker layer layer-items latitude longitude id)))
+  (.addTo layer m))
 
 ;; Yelp sidebar
 
-(defn create-biz-sidebar [start-point end-point numbered-biz]
+(defn create-biz-sidebar [start-point end-point numbered-biz layer layer-items]
   (dommy/append! (sel1 :#biz-container)
                  (biz-template start-point end-point numbered-biz))
   (doseq [biz numbered-biz]
@@ -219,25 +216,25 @@
       (go
        (while true
          (<! mouseover)
-         (remove-marker biz-layer id)
-         (add-numbered-marker-active biz-layer latitude longitude id)))
+         (remove-marker layer layer-items id)
+         (add-numbered-marker-active layer layer-items latitude longitude id)))
       (go
        (while true
          (<! mouseout)
-         (remove-marker biz-layer id)
-         (add-numbered-marker biz-layer latitude longitude id))))))
+         (remove-marker layer layer-items id)
+         (add-numbered-marker layer layer-items latitude longitude id))))))
 
 ;; Yelp/Directions setup
 
-(defn fetch-draw-directions [m to from transport-type category]
+(defn fetch-draw-directions [m to from transport-type directions-layer]
   (go
    (let [{:keys [lat-lngs start-point end-point map-bounds] :as directions}
          (<! (mapquest/directions to from transport-type))]
-     (draw-directions m directions)
+     (draw-directions m directions directions-layer)
      (reset-map m map-bounds)
      directions)))
 
-(defn draw-yelp-info [m directions category]
+(defn draw-yelp-info [m directions category layer layer-items]
   (go
    (let [{:keys [lat-lngs start-point end-point map-bounds]} directions]
      (let [numbered-biz (<! (yelp/find-and-rank-businesses
@@ -245,15 +242,18 @@
        (if (empty? numbered-biz)
          (dommy/append! (sel1 :#map-text-container) (no-biz-template))
          (do
-           (draw-yelp-markers m numbered-biz)
-           (create-biz-sidebar start-point end-point numbered-biz)
+           (draw-yelp-markers m numbered-biz layer layer-items)
+           (create-biz-sidebar start-point end-point numbered-biz layer layer-items)
            (expand-biz-sidebar)) ;; reduce map size to allow for biz sidebar
          (reset-map m map-bounds))))))
 
 ;; Full page rendering after button submit
 
-(defn setup-button-click [lat lng]
-  (let [clicks (u/listen (dom/getElement "btn-go") "click")]
+(defn setup-button-click [lat lng map]
+  (let [clicks (u/listen (dom/getElement "btn-go") "click")
+        directions-layer (-> L (.layerGroup []))
+        biz-layer (-> L (.layerGroup []))
+        biz-layer-items (atom {})]
     (go (while true
           ;; wait for a click
           (<! clicks)
@@ -277,9 +277,11 @@
                 from (from-query lat lng)
                 transport-type (transportation-query)
                 category (category-query)
-                directions (<! (fetch-draw-directions mappy to from
-                                                      transport-type category))]
-            (<! (draw-yelp-info mappy directions category))
+                directions (<! (fetch-draw-directions map to from
+                                                      transport-type
+                                                      directions-layer))]
+            (<! (draw-yelp-info map directions category
+                                biz-layer biz-layer-items))
             ;; stop loading spinner
             (stop-spinner)
             )))))
@@ -289,6 +291,7 @@
 (go 
  (let [coords    (.-coords (<! (u/get-position)))
        latitude  (.-latitude coords)
-       longitude (.-longitude coords)]
-   (setup-map mappy latitude longitude)
-   (setup-button-click latitude longitude)))
+       longitude (.-longitude coords)
+       map (-> L (.map "mappy"))]
+   (setup-map map latitude longitude)
+   (setup-button-click latitude longitude map)))
