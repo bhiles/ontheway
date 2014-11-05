@@ -147,7 +147,29 @@
 
 ;; Display Yelp businesses
 
+(defn biz-uri [to from transport-type category]
+  (let [query-params {"to" to
+                      "from" from
+                      "transport" transport-type
+                      "term" category}
+        uri (str config/hostname "/find-biz")]
+    (u/mk-uri uri query-params)))
+
+(defn fetch-businesses [to from transport-type category]
+  (go
+   (let [response (<! (http/get (biz-uri to from transport-type category)))]
+     (:body response))))
+
 (defn display-businesses [to from transport-type category]
+  (go
+   (let [{:keys [start-point end-point businesses]}
+             (<! (fetch-businesses to from transport-type category))]
+     (dommy/append! (sel1 :#biz-container)
+                    (if (empty? businesses)
+                      (no-biz-template)
+                      (biz-template start-point end-point businesses))))))
+
+(defn display-businesses-client-side [to from transport-type category]
   (go
    (let [{:keys [lat-lngs start-point end-point map-bounds] :as directions}
              (<! (mapquest/directions to from transport-type))

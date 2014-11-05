@@ -8,6 +8,7 @@
             [compojure.handler :as handler]
             [compojure.route :as route]
             [ontheway.config :as config]
+            [ontheway.mapquest :as mapquest]
             [ontheway.yelp :as yelp])
   (:import [java.net URLEncoder]
            [java.io ByteArrayInputStream]))
@@ -136,12 +137,27 @@
           (add-cors-headers (:headers req))
           (header "x-proxied-by" "On the way")))))
 
+(defn find-businesses [to from transport-type category]
+  (let [{:keys [lat-lngs start-point end-point map-bounds]}
+            (mapquest/directions to from transport-type)
+        numbered-biz (yelp/find-and-rank-businesses map-bounds
+                                                    lat-lngs
+                                                    category)]
+    {:start-point start-point
+     :end-point end-point
+     :businesses numbered-biz}))
+
 (defroutes app-routes
   (GET "/" [] (file-response "index.html" {:root "resources/public"}))
   (GET "/yelp" [] (json/write-str (yelp/fetch-businesses)))
   (GET "/yelp-bounds" {params :params}
        (json-response
         (yelp/fetch-businesses-bounds (:bounds params) (:term params))))
+  (GET "/find-biz" {params :params}
+       (json-response (find-businesses (:to params)
+                                       (:from params)
+                                       (:transport params)
+                                       (:term params))))
   (GET "/proxy" [:as req] (proxy-request req))
   (route/resources "/")
   (route/not-found "Page not found")
