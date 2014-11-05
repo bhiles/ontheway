@@ -1,17 +1,12 @@
 (ns ontheway.core
-  (:use [clojure.string :only [trim join]])
-  (:use-macros [dommy.macros :only [deftemplate sel1 sel]])
+  (:use-macros [dommy.macros :only [deftemplate sel1]])
   (:require-macros [cljs.core.async.macros :refer [go]])
-  (:require [cljs-http.client :as http]
-            [cljs.core.async :refer [put! chan <!]]
-            [ontheway.config :as config]
+  (:require [cljs.core.async :refer [chan <!]]
             [goog.dom :as dom]
-            [goog.events :as events]
             [blade :refer [L]]
             [dommy.core :as dommy]
             [ontheway.util :as u]
             [ontheway.google :as google]
-            [ontheway.box :as b]
             [ontheway.mapquest :as mapquest]
             [ontheway.yelp :as yelp]))
 

@@ -46,3 +46,10 @@
          start-lat "," start-lng "/"
          way-lat "," way-lng "/"
          dest-lat "," dest-lng "/")))
+
+(defn mobile-maps-url [start destination]
+  (let [[start-lat start-lng] start
+        [dest-lat dest-lng] destination]
+    (str "comgooglemaps://?saddr="
+         start-lat "," start-lng "&daddr="
+         dest-lat "," dest-lng)))
