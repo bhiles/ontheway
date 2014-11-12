@@ -41,8 +41,8 @@
 (defn directions [to from transport-type]
   (go
    (let [lat-lngs (<! (fetch-lat-lngs to from transport-type))
-         start-point (-> lat-lngs first (select-keys [:start-lat :start-lng]) vals)
-         end-point (-> lat-lngs last (select-keys [:end-lat :end-lng]) vals)
+         start-point (-> lat-lngs first ((juxt :start-lat :start-lng)))
+         end-point (-> lat-lngs last ((juxt :end-lat :end-lng)))
          last-lat-lng (last lat-lngs)
          lines (concat
                 (map
