@@ -108,8 +108,7 @@
                                       (-> biz
                                           :location
                                           :coordinate
-                                          (select-keys [:latitude :longitude])
-                                          vals)
+                                          ((juxt :latitude :longitude)))
                                       end-point)}
               "Directions"]]]]]]]]]]))
 

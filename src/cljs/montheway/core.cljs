@@ -83,8 +83,7 @@
                         [(first c) [:br]])
                       (:categories biz))
           [lat lng] (-> biz :location :coordinate
-                                          (select-keys [:latitude :longitude])
-                                          vals)
+                        ((juxt :latitude :longitude)))
           waypoint [lat lng]
           distance (u/distance-between start-point waypoint)
           rounded-distance (.toFixed distance 2)
