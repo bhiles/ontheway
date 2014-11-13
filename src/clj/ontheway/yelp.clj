@@ -1,15 +1,13 @@
 (ns ontheway.yelp
-  (:use [clojure.string :only [join]]
-        [clojure.walk :only [keywordize-keys]])
-  (:require [clojure.data.json :as json]
-            [gws.yelp.client :as yelp-client]
-            [ontheway.box :as b]))
+  (:require [gws.yelp.client :as yelp-client]
+            [ontheway.box :as b]
+            [ontheway.config :as c]))
 
 (def yelp-conn (yelp-client/create
-                "G5j9Jhe9v4begxf1QmWEQQ"
-                "Nc2c8UNBoYYmqqQbF5DIXp0-Ms8"
-                "SRy1O5wuwgNB-4wSTRTod7SdVeJzOifj"
-                "me9S_ctqHoNQClIhxb0zeNpIq3Y"))
+                c/yelp-consumer-key
+                c/yelp-consumer-secret
+                c/yelp-token
+                c/yelp-token-secret))
 
 (defn yelp-api-bounds [bounds term offset]
   (yelp-client/business-search yelp-conn

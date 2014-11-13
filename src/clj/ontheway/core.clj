@@ -1,8 +1,6 @@
 (ns ontheway.core
   (:use [compojure.core]
-        [ring.util.response :only [header response file-response]]
-        [clojure.string :only [join]]
-        [clojure.walk :only [keywordize-keys]])
+        [ring.util.response :only [header response file-response]])
   (:require [clojure.data.json :as json]
             [clj-http.client :as http]
             [compojure.handler :as handler]
@@ -11,8 +9,7 @@
             [ontheway.mapquest :as mapquest]
             [ontheway.yelp :as yelp]
             [ontheway.proxy :as proxy])
-  (:import [java.net URLEncoder]
-           [java.io ByteArrayInputStream]))
+  (:import [java.io ByteArrayInputStream]))
 
 ;; Utils
 

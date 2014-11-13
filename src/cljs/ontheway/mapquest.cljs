@@ -3,7 +3,8 @@
   (:require [cljs-http.client :as http]
             [cljs.core.async :refer [put! chan <!]]
             [ontheway.box :as b]
-            [ontheway.util :as u]))
+            [ontheway.util :as u]
+            [ontheway.config :as c]))
 
 (defn route-type [option]
   (case option
@@ -13,7 +14,7 @@
 
 (defn directions-uri [to from transport-type]
   (let [query-params {
-                      "key" "Fmjtd|luurnuurn0,bl=o5-9wr5lf"
+                      "key" c/mapquest-key
                       "to" to
                       "from" from
                       "routeType" (route-type transport-type)

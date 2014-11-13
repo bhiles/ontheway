@@ -1,6 +1,7 @@
 (ns ontheway.google
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [ontheway.util :as u]
+            [ontheway.config :as c]
             [cljs-http.client :as http]
             [cljs.core.async :refer [put! chan <!]]))
 
@@ -10,7 +11,7 @@
   (let [query-params {"origin" to
                       "destination" from
                       "mode" "walking"
-                      "key" "AIzaSyB8xvy6nqjaVjJlmQc8lb_ZNVY4naSkQSA"}
+                      "key" c/google-key}
         uri "https://maps.googleapis.com/maps/api/directions/json"]
     (u/mk-uri uri query-params)))
 
