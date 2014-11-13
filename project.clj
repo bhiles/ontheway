@@ -4,16 +4,20 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :source-paths ["src/clj" "src/cljs"]
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/clojurescript "0.0-2234"]
+  :dependencies [
+                 ;; clojure
+                 [org.clojure/clojure "1.5.1"]
                  [compojure "1.1.9"]
+                 [clj-http "1.0.0"]
                  [org.clojure/data.json "0.2.5"]
-                 [clojurewerkz/spyglass "1.1.0"]
+                 [gws/yelp "0.2.0"]
+
+                 ;; clojurescript
+                 [org.clojure/clojurescript "0.0-2234"]
                  [net.drib/blade "0.1.0"]
                  [prismatic/dommy "0.1.3"]
-                 [gws/yelp "0.2.0"]
-                 [cljs-http "0.1.16"]
-                 [clj-http "1.0.0"]]
+                 [cljs-http "0.1.16"]]
+  
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-ring "0.8.11"]]
   :ring {:handler ontheway.core/handler}
