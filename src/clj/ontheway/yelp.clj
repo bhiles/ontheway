@@ -1,13 +1,13 @@
 (ns ontheway.yelp
   (:require [gws.yelp.client :as yelp-client]
-            [ontheway.box :as b]
-            [ontheway.config :as c]))
+            [environ.core :refer [env]]
+            [ontheway.box :as b]))
 
 (def yelp-conn (yelp-client/create
-                c/yelp-consumer-key
-                c/yelp-consumer-secret
-                c/yelp-token
-                c/yelp-token-secret))
+                (env :yelp-consumer-key)
+                (env :yelp-consumer-secret)
+                (env :yelp-token)
+                (env :yelp-token-secret)))
 
 (defn yelp-api-bounds [bounds term offset]
   (yelp-client/business-search yelp-conn

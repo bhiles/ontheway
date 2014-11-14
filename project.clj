@@ -11,7 +11,8 @@
                  [clj-http "1.0.0"]
                  [org.clojure/data.json "0.2.5"]
                  [gws/yelp "0.2.0"]
-
+                 [environ "1.0.0"]
+                 
                  ;; clojurescript
                  [org.clojure/clojurescript "0.0-2234"]
                  [net.drib/blade "0.1.0"]

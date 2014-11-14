@@ -1,9 +1,9 @@
 (ns ontheway.mapquest
   (:require [clj-http.client :as http]
             [clojure.data.json :as json]
+            [environ.core :refer [env]]
             [ontheway.box :as b]
-            [ontheway.util :as u]
-            [ontheway.config :as c]))
+            [ontheway.util :as u]))
 
 (defn route-type [option]
   (case option
@@ -13,7 +13,7 @@
 
 (defn directions-uri [to from transport-type]
   (let [query-params {
-                      "key" c/mapquest-key
+                      "key" (env :mapquest-key)
                       "to" to
                       "from" from
                       "routeType" (route-type transport-type)

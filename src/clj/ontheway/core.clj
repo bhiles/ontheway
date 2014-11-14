@@ -5,7 +5,7 @@
             [clj-http.client :as http]
             [compojure.handler :as handler]
             [compojure.route :as route]
-            [ontheway.config :as config]
+            [environ.core :refer [env]]
             [ontheway.mapquest :as mapquest]
             [ontheway.yelp :as yelp]))
 
@@ -14,7 +14,7 @@
 (defn json-response [data & [status]]
   {:status (or status 200)
    :headers {"Content-Type" "application/json"
-             "Access-Control-Allow-Origin" config/hostname
+             "Access-Control-Allow-Origin" (env :hostname)
              "Access-Control-Allow-Credentials" "true"}
    :body (json/write-str data)})
 
