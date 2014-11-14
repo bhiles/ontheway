@@ -40,9 +40,6 @@
        (join "&"
              (map (fn [[k v]] (str k "=" (url-encode v))) query-params))))
 
-(defn proxy-url [url]
-  (str (hostname) "/proxy?url=" (url-encode url)))
-
 (defn json-parse [s]
   (js->clj
    (.parse js/JSON s)
