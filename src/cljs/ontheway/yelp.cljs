@@ -1,9 +1,5 @@
 (ns ontheway.yelp
-  (:require-macros [cljs.core.async.macros :refer [go]])
-  (:require [cljs-http.client :as http]
-            [cljs.core.async :refer [put! chan <!]]
-            [ontheway.config :as config]
-            [ontheway.box :as b]
+  (:require [ontheway.box :as b]
             [ontheway.util :as u]))
 
 (defn filter-businesses-on-the-way [steps businesses]
@@ -32,14 +28,11 @@
         uri (str (u/hostname) "/yelp-bounds")]
     (u/mk-uri uri query-params)))
 
-(defn find-and-rank-businesses [map-bounds lat-lngs category]
-  (go
-   (let [yelp-response (<! (http/get (biz-uri map-bounds category)))
-         businesses (-> yelp-response :body)
-         relevant-biz (->> businesses
-                           (filter-businesses-on-the-way lat-lngs)
-                           sort-filter-businesses)
-         numbered-biz (map #(assoc %1 :id %2)
-                           relevant-biz
-                           (iterate inc 1))]
-       numbered-biz)))
+(defn filter-and-rank-businesses [businesses lat-lngs]
+  (let [relevant-biz (->> businesses
+                          (filter-businesses-on-the-way lat-lngs)
+                          sort-filter-businesses)
+        numbered-biz (map #(assoc %1 :id %2)
+                          relevant-biz
+                          (iterate inc 1))]
+    numbered-biz))

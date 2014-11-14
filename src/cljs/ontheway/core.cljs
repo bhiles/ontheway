@@ -1,13 +1,13 @@
 (ns ontheway.core
   (:use-macros [dommy.macros :only [deftemplate sel1]])
   (:require-macros [cljs.core.async.macros :refer [go]])
-  (:require [cljs.core.async :refer [chan <!]]
+  (:require [cljs.core.async :refer [<!]]
             [goog.dom :as dom]
             [blade :refer [L]]
             [dommy.core :as dommy]
             [ontheway.util :as u]
+            [ontheway.api :as api]
             [ontheway.google :as google]
-            [ontheway.mapquest :as mapquest]
             [ontheway.yelp :as yelp]))
 
 ;; Setup
@@ -224,23 +224,23 @@
 (defn fetch-draw-directions [m to from transport-type directions-layer]
   (go
    (let [{:keys [lat-lngs start-point end-point map-bounds] :as directions}
-         (<! (mapquest/directions to from transport-type))]
+         (<! (api/mapquest-directions to from transport-type))]
      (draw-directions m directions directions-layer)
      (reset-map m map-bounds)
      directions)))
 
 (defn draw-yelp-info [m directions category layer layer-items]
   (go
-   (let [{:keys [lat-lngs start-point end-point map-bounds]} directions]
-     (let [numbered-biz (<! (yelp/find-and-rank-businesses
-                             map-bounds lat-lngs category))]
-       (if (empty? numbered-biz)
-         (dommy/append! (sel1 :#map-text-container) (no-biz-template))
-         (do
-           (draw-yelp-markers m numbered-biz layer layer-items)
-           (create-biz-sidebar start-point end-point numbered-biz layer layer-items)
-           (expand-biz-sidebar)) ;; reduce map size to allow for biz sidebar
-         (reset-map m map-bounds))))))
+   (let [{:keys [lat-lngs start-point end-point map-bounds]} directions
+         businesses (<! (api/yelp-bounds map-bounds category))
+         numbered-biz (yelp/filter-and-rank-businesses businesses lat-lngs)]
+     (if (empty? numbered-biz)
+       (dommy/append! (sel1 :#map-text-container) (no-biz-template))
+       (do
+         (draw-yelp-markers m numbered-biz layer layer-items)
+         (create-biz-sidebar start-point end-point numbered-biz layer layer-items)
+         (expand-biz-sidebar)) ;; reduce map size to allow for biz sidebar
+       (reset-map m map-bounds)))))
 
 ;; Full page rendering after button submit
 

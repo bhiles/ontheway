@@ -1,16 +1,15 @@
 (ns montheway.core
   (:use [clojure.string :only [split]])
-  (:use-macros [dommy.macros :only [deftemplate sel1 sel]])
+  (:use-macros [dommy.macros :only [deftemplate sel1]])
   (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs-http.client :as http]
-            [cljs.core.async :refer [put! chan <!]]
+            [cljs.core.async :refer [<!]]
             [goog.dom :as dom]
             [goog.events :as events]
             [dommy.core :as dommy]
-            [ontheway.config :as config]
             [ontheway.util :as u]
+            [ontheway.api :as api]
             [ontheway.google :as google]
-            [ontheway.mapquest :as mapquest]
             [ontheway.yelp :as yelp]
             [montheway.waze :as waze]))
 
@@ -162,22 +161,11 @@
 (defn display-businesses [to from transport-type category]
   (go
    (let [{:keys [start-point end-point businesses]}
-             (<! (fetch-businesses to from transport-type category))]
+             (<! (api/find-biz to from transport-type category))]
      (dommy/append! (sel1 :#biz-container)
                     (if (empty? businesses)
                       (no-biz-template)
                       (biz-template start-point end-point businesses))))))
-
-(defn display-businesses-client-side [to from transport-type category]
-  (go
-   (let [{:keys [lat-lngs start-point end-point map-bounds] :as directions}
-             (<! (mapquest/directions to from transport-type))
-         numbered-biz (<! (yelp/find-and-rank-businesses
-                           map-bounds lat-lngs category))]
-     (dommy/append! (sel1 :#biz-container)
-                    (if (empty? numbered-biz)
-                      (no-biz-template)
-                      (biz-template start-point end-point numbered-biz))))))
 
 ;; Page rendering logic after button submit
 

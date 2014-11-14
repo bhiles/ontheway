@@ -56,6 +56,11 @@
        (json-response
         (yelp/fetch-businesses-bounds (:bounds params)
                                       (:term params))))
+  (GET "/mapquest-directions" {params :params}
+       (json-response
+        (mapquest/directions (:to params)
+                             (:from params)
+                             (:transport-type params))))
   (GET "/find-biz" {params :params}
        (json-response (find-businesses (:to params)
                                        (:from params)

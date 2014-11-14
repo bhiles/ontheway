@@ -1,8 +1,7 @@
 (ns ontheway.util
   (:use [clojure.string :only [trim join]])
   (:require-macros [cljs.core.async.macros :refer [go]])
-  (:require [ontheway.config :as config]
-            [cljs.core.async :refer [put! chan <!]]
+  (:require [cljs.core.async :refer [put! chan]]
             [goog.dom :as dom]
             [goog.events :as events]))
 
