@@ -6,6 +6,10 @@ A website that lets you enter where you are going and it finds places for you to
 
 Find places to eat/drink that are on your route.  Currently, Yelp lets you search a radius, but when driving a location > 10 miles away the radius search becomes useless, since it suggests places that are nowhere near your route.  This product addresses that problem, and only suggests places close to your route.  This will not provide directions, it merely suggests places to go near your route, but it does offer links to get directions.
 
+## How it works
+
+You enter where you are going and directions are fetched from Mapquest.  Those directions are composed of a list of latitudes and longitudes.  Grouping two consecutive latitude/longitude points allows you to have a starting point and and ending point.  Drawing all these start/end points together lets you draw a route.  But more importantly, taking a start/end point you can draw a box around that section of the route.  Yelp allows you to search businesses by using a box like this, so next we fetch a list businesses from them.  Finally, we display the route and the businesses.
+
 ## Technologies
 
 * Clojure

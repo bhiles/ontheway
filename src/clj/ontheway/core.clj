@@ -20,7 +20,12 @@
 
 ;; /find-biz endpoint
 
-(defn find-businesses [to from transport-type category]
+(defn find-businesses
+  "This endpoints is specifically designed for the mobile client.
+  It combines the /mapquest-directions endpoint and the
+  /yelp-bounds endpoints into one call to allow the server to do the
+  computationally heavy lifting instead of the mobile client."
+  [to from transport-type category]
   (let [{:keys [lat-lngs start-point end-point map-bounds]}
             (mapquest/directions to from transport-type)
         numbered-biz (yelp/find-and-rank-businesses map-bounds
