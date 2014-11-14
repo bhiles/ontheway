@@ -1,43 +1,50 @@
-# ontheway
+# On The Way
 
 A website that lets you enter where you are going and it finds places for you to go while you are on your way.  This most likely is a restaurant but could also be a park or any searchable place.
 
 ## Goal
 
-Find places to eat/drink that are on your route.  Currently, Yelp lets you search a radius, but when driving a location > 10 miles away the radius search becomes useless, since it suggests places that are nowhere near your route.  This product addresses that problem, and only suggests places close to your route.  This application will not provide directions, it merely suggests places to go near your route.  
+Find places to eat/drink that are on your route.  Currently, Yelp lets you search a radius, but when driving a location > 10 miles away the radius search becomes useless, since it suggests places that are nowhere near your route.  This product addresses that problem, and only suggests places close to your route.  This will not provide directions, it merely suggests places to go near your route, but it does offer links to get directions.
 
 ## Technologies
 
 * Clojure
-* Compojure (Web API)
-* json library
-* http library for clojurescript and clojure
-* Yelp api lib
 * Clojurescript
 * Leaflet.js
 * Bootstrap
 * Yelp API
-* Google Directions API
 * Mapquest API
-* Google Autocomplete
-* Ladda.js
-* detectmobile.js
+* additional [clojure libs](project.clj)
+* additional [javascript libs](resources/public/js)
 
-## Developing
+## Developers
 
-Requirements 
+### Requirements 
 
-*(clojure 1.5+)
+* Lein
+* Clojure
+* [Mapquest API key](http://developer.mapquest.com/)
+* [Yelp API access](http://www.yelp.com/developers/manage_api_keys)
 
-Edit configuration files to enter in your API keys
-lein ring server
-lein cljsbuild auto default mobile
+### Running
 
-## Resources
+Edit [configuration file](.lein-env) to enter in your API keys.
 
-- website
-- mobile site
-- [Uptime Robot](https://uptimerobot.com/) for monitoring
+Convert the Clojurescript to Javascript.
+
+    lein cljsbuild auto default mobile
+
+Start the ring server
+
+    lein ring server
+
+[Load the application in a brower](http://localhost:3000)
+
+## Additional Resources
+
+* [Website](http://bennetthiles.com/map.html)
+- [Mobile website](http://bennetthiles.com/mmap.html)
+- [Uptime Robot](https://uptimerobot.com/) - used for monitoring
 
 ## License
 
