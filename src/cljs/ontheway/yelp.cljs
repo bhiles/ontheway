@@ -29,7 +29,7 @@
                                     (:ne-lat map-bounds) ","
                                     (:ne-lng map-bounds))
                       "term" term}
-        uri (str config/hostname "/yelp-bounds")]
+        uri (str (u/hostname) "/yelp-bounds")]
     (u/mk-uri uri query-params)))
 
 (defn find-and-rank-businesses [map-bounds lat-lngs category]

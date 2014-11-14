@@ -25,6 +25,14 @@
 
 ;; HTTP helpers
 
+(defn hostname
+  "Returns the hostname of the current page.
+   For example: http://example.com:8080"
+  []
+  (let [host  (-> js/window .-location .-host)
+        protocol (-> js/window .-location .-protocol)]
+    (str protocol "//" host)))
+
 (defn url-encode [s]
   (js/encodeURIComponent s))
 
@@ -34,7 +42,7 @@
              (map (fn [[k v]] (str k "=" (url-encode v))) query-params))))
 
 (defn proxy-url [url]
-  (str config/hostname "/proxy?url=" (url-encode url)))
+  (str (hostname) "/proxy?url=" (url-encode url)))
 
 (defn json-parse [s]
   (js->clj

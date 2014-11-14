@@ -1,6 +1,6 @@
 (ns ontheway.config)
 
-(def hostname "http://my.local.com:3000")
+(def hostname "http://localhost:3000")
 (def mapquest-key "Fmjtd|luurnuurn0,bl=o5-9wr5lf")
 (def yelp-consumer-key "G5j9Jhe9v4begxf1QmWEQQ")
 (def yelp-consumer-secret "Nc2c8UNBoYYmqqQbF5DIXp0-Ms8")

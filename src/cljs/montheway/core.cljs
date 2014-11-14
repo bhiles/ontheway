@@ -151,7 +151,7 @@
                       "from" from
                       "transport" transport-type
                       "term" category}
-        uri (str config/hostname "/find-biz")]
+        uri (str (u/hostname) "/find-biz")]
     (u/mk-uri uri query-params)))
 
 (defn fetch-businesses [to from transport-type category]
