@@ -11,3 +11,6 @@ pom.xml.asc
 # cljs compiled files
 resources/public/js/core.js
 resources/public/js/mobile-core.js
+
+# project vars
+start-server.sh
