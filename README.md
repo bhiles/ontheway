@@ -14,9 +14,11 @@ Find places to eat/drink that are on your route.  Currently, Yelp lets you searc
 * http library for clojurescript and clojure
 * Yelp api lib
 * Clojurescript
-* Leaflet.js (Map)
-* Bootstrap (CSS)
-* Yelp API, Google Directions API, Mapquest API
+* Leaflet.js
+* Bootstrap
+* Yelp API
+* Google Directions API
+* Mapquest API
 * Google Autocomplete
 * Ladda.js
 * detectmobile.js
@@ -39,7 +41,7 @@ lein cljsbuild auto default mobile
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © Bennett Hiles
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
