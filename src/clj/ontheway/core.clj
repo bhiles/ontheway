@@ -1,15 +1,13 @@
 (ns ontheway.core
   (:use [compojure.core]
-        [ring.util.response :only [header response file-response]])
+        [ring.util.response :only [header file-response]])
   (:require [clojure.data.json :as json]
             [clj-http.client :as http]
             [compojure.handler :as handler]
             [compojure.route :as route]
             [ontheway.config :as config]
             [ontheway.mapquest :as mapquest]
-            [ontheway.yelp :as yelp]
-            [ontheway.proxy :as proxy])
-  (:import [java.io ByteArrayInputStream]))
+            [ontheway.yelp :as yelp]))
 
 ;; Utils
 
@@ -32,20 +30,6 @@
      :end-point end-point
      :businesses numbered-biz}))
 
-;; /proxy endpoint - proxies requests
-
-(defn proxy-request 
-  "Attribution: https://github.com/rm-hull/programming-enchiladas"
-  [req]
-   (let [url (get-in req [:params :url])
-         resp (http/get url {:as :byte-array})]
-      (if (= (:status resp) 200)
-        (->
-          (response (ByteArrayInputStream. (:body resp)))
-          (proxy/add-original-headers (:headers resp))
-          (proxy/add-cors-headers (:headers req))
-          (header "x-proxied-by" "On the way")))))
-
 (defroutes app-routes
   
   ;; serves html
@@ -66,7 +50,6 @@
                                        (:from params)
                                        (:transport params)
                                        (:term params))))
-  (GET "/proxy" [:as req] (proxy-request req))
 
   ;; serves defaults
   (route/resources "/")
