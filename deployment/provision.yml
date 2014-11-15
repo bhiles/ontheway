@@ -1,0 +1,22 @@
+---
+- hosts: production
+  vars_files:
+    - vars.yml
+  sudo: true
+  sudo_user: root
+
+  tasks:
+    - name: Test connection
+      ping:
+
+    - name: Update ubuntu
+      shell: apt-get update
+
+    - name: Upgrade ubuntu
+      shell: apt-get upgrade -y
+
+    - name: Install java
+      shell: apt-get install openjdk-7-jdk -y
+
+    - name: Create deploy directory
+      file: group=bennett owner=bennett mode=755 state=directory path={{ project_root }}
