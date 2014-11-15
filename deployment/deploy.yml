@@ -9,7 +9,7 @@
       command: lein ring uberjar
 
     - name: Rsync jar to remote server
-      command: rsync -avz {{project_jar_file}} bennett@dipity-do:{{ project_root }}
+      command: rsync -avz {{project_jar_file}} {{ production_user }}@{{ production_server }}:{{ project_root }}
 
 - hosts: production
   vars_files:

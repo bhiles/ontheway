@@ -1,4 +1,6 @@
 ---
+production_server: ontheway.bennetthiles.com
+production_user: bennett
 project_name: ontheway
 project_root: /var/ontheway
 project_jar: ontheway-0.1.0-SNAPSHOT-standalone.jar

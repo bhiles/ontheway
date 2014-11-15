@@ -44,10 +44,30 @@ Start the ring server
 
 [Load the application in a brower](http://localhost:3000)
 
+## Deployment
+
+### Requirements
+
+* Ansible
+
+### Setup
+
+Add the server's hostname to [the hosts](deployment/hosts) and [vars.yml](deployment/vars.yml).  I have it currently configured for ontheway.bennetthiles.com.
+
+Install all the dependencies on your server
+
+    ansible-playbook deployment/provision.yml -i deployment/hosts --ask-sudo-pass
+
+Build a jar locally and deploy it to your server. Make sure to fill in the real values for the extra variables.
+
+   ansible-playbook deployment/deploy.yml -i deployment/hosts --extra-vars '{"hostname":"http://ontheway.bennetthiles.com","mapquest_key":"A","yelp_consumer_key":"B","yelp_consumer_secret":"C","yelp_token":"D","yelp_token_secret":"E"}' --ask-sudo-pass
+
+On your server you should see the newly launched Java process running. 
+
 ## Additional Resources
 
-* [Website](http://bennetthiles.com/map.html)
-- [Mobile website](http://bennetthiles.com/mmap.html)
+* [Website](http://ontheway.bennetthiles.com/map.html)
+- [Mobile website](http://ontheway.bennetthiles.com/mmap.html)
 - [Uptime Robot](https://uptimerobot.com/) - used for monitoring
 
 ## License

@@ -1,6 +1,0 @@
----
-- hosts: dipity-do
-  remote_user: bennett
-  tasks:
-    - name: test connection
-      ping:

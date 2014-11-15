@@ -6,9 +6,6 @@
   sudo_user: root
 
   tasks:
-    - name: Test connection
-      ping:
-
     - name: Update ubuntu
       shell: apt-get update
 
@@ -19,4 +16,4 @@
       shell: apt-get install openjdk-7-jdk -y
 
     - name: Create deploy directory
-      file: group=bennett owner=bennett mode=755 state=directory path={{ project_root }}
+      file: group={{ production_user }} owner={{ production_user }} mode=755 state=directory path={{ project_root }}
