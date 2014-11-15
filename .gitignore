@@ -12,5 +12,7 @@ pom.xml.asc
 resources/public/js/core.js
 resources/public/js/mobile-core.js
 
-# project vars
+# helper scripts
 start-server.sh
+deploy.sh
+provision.sh
