@@ -1,6 +1,6 @@
 (ns ontheway.core
   (:use [compojure.core]
-        [ring.util.response :only [header file-response]])
+        [ring.util.response :only [header resource-response]])
   (:require [clojure.data.json :as json]
             [clj-http.client :as http]
             [compojure.handler :as handler]
@@ -38,7 +38,7 @@
 (defroutes app-routes
   
   ;; serves html
-  (GET "/" [] (file-response "index.html" {:root "resources/public"}))
+  (GET "/" [] (resource-response "index.html" {:root "public"}))
   
   ;; API endpoints 
   (GET "/yelp-bounds" {params :params}
