@@ -23,14 +23,14 @@ You enter where you are going and directions are fetched from Mapquest.  Those d
 
 ## Developers
 
-### Requirements 
+#### Requirements 
 
 * Lein
 * Clojure
 * [Mapquest API key](http://developer.mapquest.com/)
 * [Yelp API access](http://www.yelp.com/developers/manage_api_keys)
 
-### Running
+#### Running
 
 Edit [configuration file](.lein-env) to enter in your API keys.
 
@@ -46,11 +46,11 @@ Start the ring server
 
 ## Deployment
 
-### Requirements
+#### Requirements
 
 * Ansible
 
-### Setup
+#### Setup
 
 Add the server's hostname to [the hosts](deployment/hosts) and [vars.yml](deployment/vars.yml).  I have it currently configured for ontheway.bennetthiles.com.
 
@@ -60,7 +60,7 @@ Install all the dependencies on your server
 
 Build a jar locally and deploy it to your server. Make sure to fill in the real values for the extra variables.
 
-   ansible-playbook deployment/deploy.yml -i deployment/hosts --extra-vars '{"hostname":"http://ontheway.bennetthiles.com","mapquest_key":"A","yelp_consumer_key":"B","yelp_consumer_secret":"C","yelp_token":"D","yelp_token_secret":"E"}' --ask-sudo-pass
+    ansible-playbook deployment/deploy.yml -i deployment/hosts --extra-vars '{"hostname":"http://ontheway.bennetthiles.com","mapquest_key":"A","yelp_consumer_key":"B","yelp_consumer_secret":"C","yelp_token":"D","yelp_token_secret":"E"}' --ask-sudo-pass
 
 On your server you should see the newly launched Java process running. 
 
