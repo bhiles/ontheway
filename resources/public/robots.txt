@@ -1,0 +1,15 @@
+User-agent: Googlebot
+Crawl-delay: 300
+Allow: /index.html
+Disallow: /
+
+User-agent: Yandex
+Allow: /index.html
+Disallow: /
+
+User-agent: bingbot
+Allow: /index.html
+Disallow: /
+
+User-agent: *
+Disallow: /
