@@ -20,8 +20,9 @@
                  [cljs-http "0.1.16"]]
   
   :plugins [[lein-cljsbuild "1.0.3"]
-            [lein-ring "0.8.11"]]
+            [lein-ring "0.8.12"]]
   :ring {:handler ontheway.core/handler}
+  :profiles {:uberjar {:aot :all}}
   :cljsbuild {:builds
               {:default
                {:source-paths ["src/cljs/ontheway"]
