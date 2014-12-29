@@ -20,7 +20,7 @@
                       "narrativeType" "none"
                       "shapeFormat" "raw"
                       "generalize" "0"}
-        uri "http://www.mapquestapi.com/directions/v2/route"]
+        uri "http://open.mapquestapi.com/directions/v2/route"]
     (u/mk-uri uri query-params)))
 
 (defn fetch-lat-lngs [to from transport-type]
