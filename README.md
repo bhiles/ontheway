@@ -1,6 +1,6 @@
-# On The Way
+# [On The Way](http://ontheway.bennetthiles.com)
 
-[A website](http://ontheway.bennetthiles.com) that lets you enter where you are going and it finds places for you to go while you are on your way.  This most likely is a restaurant but could also be a park or any searchable place.
+A website that lets you enter where you are going and it finds places for you to go while you are on your way.  This most likely is a restaurant but could also be a park or any searchable place.
 
 ## Goal
 
