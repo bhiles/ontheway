@@ -31,17 +31,24 @@
 (def autocompleteTo (google.maps.places.Autocomplete.
                      (dom/getElement "directions-to")))
 
+(defn format-lat-lng [lat lng]
+  (str lat "," lng))
+
+(defn google-place->lat-lng [node]
+  (let [loc (-> node .-geometry .-location)]
+    (format-lat-lng (.lat loc) (.lng loc))))
+
 (defn from-query [lat lng]
   (if-let [node (.getPlace autocompleteFrom)]
-    (.-formatted_address node)
+    (google-place->lat-lng node)
     (let [form-val (.-value (dom/getElement "directions-from"))]
       (if (u/empty-string? form-val)
-        (str lat "," lng)
+        (format-lat-lng lat lng)
         form-val))))
 
 (defn to-query []
   (if-let [node (.getPlace autocompleteTo)]
-    (.-formatted_address node)
+    (google-place->lat-lng node)
     (.-value (dom/getElement "directions-to"))))
 
 (defn category-query []
