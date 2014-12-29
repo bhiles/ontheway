@@ -1,6 +1,6 @@
 (defproject ontheway "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "A website the helps your find great places"
+  :url "http://ontheway.bennetthiles.com"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :source-paths ["src/clj" "src/cljs"]
