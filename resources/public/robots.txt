@@ -1,5 +1,4 @@
 User-agent: Googlebot
-Crawl-delay: 300
 Allow: /index.html
 Allow: /map.html
 Allow: /mmap.html
